@@ -43,7 +43,8 @@ module.exports = class QingMoPlugin extends Plugin {
         if (saved && typeof saved === 'object' && !Array.isArray(saved)) Object.assign(this.settings, saved);
         if (this.disposed) return;
         this.mobile = ['mobile', 'browser-mobile'].includes(getFrontend());
-        this.addIcons('<symbol id="iconQingMo" viewBox="0 0 24 24"><path d="M12 4v16M4 12h16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>');
+        // 顶栏与侧栏图标：轻墨 logo 的单色线性简化（便签卡片、半透明墨浪、一滴墨），线宽与思源自带图标一致。
+        this.addIcons('<symbol id="iconQingMo" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M2.6 15c2.4 1.6 5.6 1 8.6-1.3 2.2-1.7 4.8-2.6 6.8-1.9 1.9.9 1.9 3.8-.4 4.4-1.5.4-2.5.7-3.7 2.4-1.3 1.9-3.4 2.9-6.4 2.9h-.9a4 4 0 0 1-4-4z" fill="currentColor" fill-opacity=".35" stroke="none"/><path d="M2.6 17.4V7.6a4 4 0 0 1 3.5-4l7.4-1a4 4 0 0 1 4.5 4v5.1c1.9.9 1.9 3.8-.4 4.4-1.5.4-2.5.7-3.7 2.4-1.3 1.9-3.4 2.9-6.4 2.9h-.9a4 4 0 0 1-4-4z"/><path d="M2.6 15c2.4 1.6 5.6 1 8.6-1.3 2.2-1.7 4.8-2.6 6.8-1.9M6.8 7.6l5.8-.9M6.8 10.6l2.8-.4"/><circle cx="20" cy="19.6" r="1.6" fill="currentColor" stroke="none"/></symbol>');
         this.addTopBar({ icon: 'iconQingMo', title: this.t('pluginTitle'), callback: () => this.open() });
         this.addCommand({ langKey: 'quickCapture', hotkey: '⌥⇧Q', callback: () => this.open(true) });
         const plugin = this;
