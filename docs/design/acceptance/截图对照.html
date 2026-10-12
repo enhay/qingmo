@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="zh-CN">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>轻墨一期 · 截图对照</title>
+<style>
+body{margin:24px auto;padding:0 20px;max-width:1300px;font:15px/1.7 system-ui;background:#f4f5f7;color:#222}
+h1{font-size:24px}p{max-width:980px}label{display:inline-flex;align-items:center;gap:12px;margin-right:24px}
+select,input{min-height:44px;font:inherit}main{display:flex;gap:24px;flex-wrap:wrap}figure{margin:16px 0}
+figcaption{font-weight:600;margin-bottom:8px}.frame{position:relative;width:402px;height:874px;background:white;overflow:hidden;border:1px solid #ddd}
+img{width:402px;height:874px;object-fit:fill;display:block}.overlay img{position:absolute;inset:0}.overlay .actual{opacity:.5}
+</style>
+<h1>轻墨一期截图对照</h1>
+<p>左侧为产品文档的 flomo 参考图，中间为隔离思源 3.8.5 移动网页端的真实截图，右侧为原始坐标叠图。截图采用 402×874 浏览器视口，未模拟 iOS 状态栏、底部安全区或原生键盘；卡片内容与参考图不同。此页用于观察布局差异，不能据此判定真机 ±1pt 或键盘验收通过。</p>
+<p>一期省略参考图中的 AI 胶囊、月统计、音频与麦克风；增加返回入口及可键盘操作的日期选择入口。文字对比度优先于参考图中偏浅的颜色。</p>
+<label>页面<select id="page"><option value="cards">卡片流</option><option value="sidebar">侧边栏</option><option value="compose">输入面板</option></select></label>
+<label>轻墨叠图透明度<input id="opacity" type="range" min="0" max="100" value="50"></label>
+<main>
+<figure><figcaption>参考图</figcaption><div class="frame"><img id="reference" alt="flomo 参考图"></div></figure>
+<figure><figcaption>实际页面</figcaption><div class="frame"><img id="actual" alt="轻墨实际页面"></div></figure>
+<figure><figcaption>原始坐标叠图</figcaption><div class="frame overlay"><img id="base" alt="参考图底层"><img id="overlay" class="actual" alt="轻墨叠图层"></div></figure>
+</main>
+<script>
+const pages={cards:['../reference/flomo-02-卡片流.jpg','02-移动网页-亮色卡片.png'],sidebar:['../reference/flomo-01-侧边栏.jpg','03-移动网页-侧边栏.png'],compose:['../reference/flomo-03-输入面板.jpg','04-移动网页-输入面板.png']};
+function show(){const [reference,actual]=pages[document.querySelector('#page').value];for(const id of ['reference','base'])document.getElementById(id).src=reference;for(const id of ['actual','overlay'])document.getElementById(id).src=actual;}
+document.querySelector('#page').addEventListener('change',show);document.querySelector('#opacity').addEventListener('input',event=>document.querySelector('#overlay').style.opacity=event.target.value/100);show();
+</script>
+</html>

@@ -1,0 +1,14 @@
+{
+  "name": "siyuan-qingmo",
+  "version": "0.1.0",
+  "private": true,
+  "description": "轻墨：思源原生块速记插件",
+  "scripts": {
+    "build": "node scripts/build.js",
+    "dev": "node --watch-path=src --watch-path=i18n scripts/build.js",
+    "link": "node scripts/build.js && node scripts/link.js",
+    "test": "node --test"
+  },
+  "engines": { "node": ">=22" },
+  "license": "UNLICENSED"
+}

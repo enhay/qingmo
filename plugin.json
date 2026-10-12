@@ -1,0 +1,13 @@
+{
+  "name": "siyuan-qingmo",
+  "author": "QingMo",
+  "icon": "icon.png",
+  "version": "0.1.0",
+  "minAppVersion": "3.8.5",
+  "backends": ["windows", "linux", "darwin", "docker", "android", "ios"],
+  "frontends": ["desktop", "browser-desktop", "mobile", "browser-mobile"],
+  "displayName": { "default": "轻墨", "zh-CN": "轻墨" },
+  "description": { "default": "以思源原生块保存碎片想法", "zh-CN": "以思源原生块保存碎片想法" },
+  "readme": { "default": "README.md", "zh-CN": "README.md" },
+  "keywords": ["memo", "速记"]
+}

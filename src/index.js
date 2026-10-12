@@ -1,0 +1,124 @@
+'use strict';
+const { Plugin, Dialog, openTab, openMobileFileById, getFrontend } = require('siyuan');
+const { MemoRepository, DEFAULT_SETTINGS } = require('./data');
+const { createView } = require('./ui');
+
+function safeHTML(html) {
+    const template = document.createElement('template');
+    template.innerHTML = html;
+    const allowed = new Set('P BR STRONG EM DEL S UL OL LI BLOCKQUOTE PRE CODE A IMG SPAN DIV H1 H2 H3 H4 H5 H6 HR TABLE THEAD TBODY TR TH TD'.split(' '));
+    for (const element of Array.from(template.content.querySelectorAll('*'))) {
+        if (!allowed.has(element.tagName)) { element.remove(); continue; }
+        for (const attribute of Array.from(element.attributes)) {
+            const name = attribute.name.toLowerCase();
+            if (!['href', 'src', 'alt', 'title', 'class', 'data-type', 'data-content'].includes(name)) element.removeAttribute(attribute.name);
+        }
+        for (const name of ['href', 'src']) {
+            const value = element.getAttribute(name);
+            if (value == null) continue;
+            const compact = value.replace(/[\u0000-\u0020\u007f]/g, '');
+            const safe = name === 'src' ? /^(?:https?:\/\/|\/?assets\/)/i.test(compact) : /^(?:https?:\/\/|mailto:|siyuan:\/\/blocks\/|#|\/?assets\/)/i.test(compact);
+            if (!safe) element.removeAttribute(name);
+        }
+        if (element.tagName === 'A') element.setAttribute('rel', 'noopener noreferrer');
+    }
+    return template.innerHTML;
+}
+
+module.exports = class QingMoPlugin extends Plugin {
+    async onload() {
+        this.views = new Set();
+        this.disposed = false;
+        this.settings = { ...DEFAULT_SETTINGS };
+        this.t = (key, values = {}) => String(this.i18n[key] || key).replace(/\{(\w+)\}/g, (_, name) => values[name] == null ? `{${name}}` : String(values[name]));
+        this.repository = new MemoRepository(async (path, body = {}) => {
+            const multipart = typeof FormData !== 'undefined' && body instanceof FormData;
+            const response = await fetch(path, { method: 'POST', headers: multipart ? undefined : { 'Content-Type': 'application/json' }, body: multipart ? body : JSON.stringify(body) });
+            if (!response.ok) throw new Error(this.t('requestFailed', { code: response.status }));
+            const envelope = await response.json();
+            if (envelope.code !== 0) throw new Error(envelope.msg || this.t('requestFailed', { code: envelope.code }));
+            return envelope.data;
+        });
+        const saved = await this.loadData('settings.json');
+        if (saved && typeof saved === 'object' && !Array.isArray(saved)) Object.assign(this.settings, saved);
+        if (this.disposed) return;
+        this.mobile = ['mobile', 'browser-mobile'].includes(getFrontend());
+        this.addIcons('<symbol id="iconQingMo" viewBox="0 0 24 24"><path d="M12 4v16M4 12h16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>');
+        this.addTopBar({ icon: 'iconQingMo', title: this.t('pluginTitle'), callback: () => this.open() });
+        this.addCommand({ langKey: 'quickCapture', hotkey: '⌥⇧Q', callback: () => this.open(true) });
+        const plugin = this;
+        this.addDock({ type: 'qingmo', config: { position: 'RightTop', size: { width: 380, height: 0 }, icon: 'iconQingMo', title: this.t('pluginTitle') }, data: {}, init: function () { this.qingmoView = plugin.mount(this.element, 'dock'); }, destroy: function () { plugin.unmount(this.qingmoView); } });
+        this.refreshViews = () => { for (const view of this.views) Promise.resolve(view.refresh()).catch(() => {}); };
+        this.keyboardHandler = () => { for (const view of this.views) view.keyboardChanged(); };
+        this.foregroundHandler = () => { if (document.visibilityState === 'visible') this.refreshViews(); };
+        this.eventBus.on('sync-end', this.refreshViews);
+        this.eventBus.on('mobile-keyboard-show', this.keyboardHandler);
+        this.eventBus.on('mobile-keyboard-hide', this.keyboardHandler);
+        document.addEventListener('visibilitychange', this.foregroundHandler);
+        window.addEventListener('focus', this.refreshViews);
+        window.visualViewport?.addEventListener('resize', this.keyboardHandler);
+        window.visualViewport?.addEventListener('scroll', this.keyboardHandler);
+        this.themeObserver = new MutationObserver(() => { for (const view of this.views) view.setTheme(this.theme()); });
+        this.themeObserver.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme-mode', 'data-light-theme', 'data-dark-theme'] });
+    }
+    theme() { return window.siyuan.config.appearance.mode === 1 ? 'dark' : 'light'; }
+    mount(container, mode) {
+        if (this.disposed) return null;
+        const view = createView({ container, repository: this.repository, settings: this.settings, beforeCompose: () => { for (const other of this.views) if (other !== view && !other.releaseComposer()) return false; return true; }, saveSettings: async settings => { await this.saveData('settings.json', settings); Object.assign(this.settings, settings); this.updateFloating(); }, t: this.t, onClose: () => this.close(), mode, openBlock: id => { this.close(); if (this.mobile) openMobileFileById(this.app, id); else openTab({ app: this.app, doc: { id } }); }, renderMarkdown: markdown => { const lute = window.Lute.New(); lute.SetTag(true); lute.SetSanitize(true); return safeHTML(lute.MarkdownStr('qingmo', markdown)); } });
+        this.views.add(view);
+        view.setTheme(this.theme());
+        return view;
+    }
+    unmount(view) { if (view && this.views.delete(view)) view.destroy(); }
+    open(compose = false) {
+        if (this.disposed) return;
+        if (!this.dialog) {
+            for (const active of this.views) if (!active.releaseComposer()) return;
+            let view;
+            const dialog = new Dialog({ title: this.t('pluginTitle'), content: '<div class="qingmo-host"></div>', width: '100vw', height: '100dvh', hideCloseIcon: true, destroyCallback: () => { this.unmount(view); if (this.dialog === dialog) { this.dialog = null; this.fullscreenView = null; this.destroyDialog = null; this.updateFloating(); if (!this.disposed) this.refreshViews(); } } });
+            this.dialog = dialog;
+            this.updateFloating();
+            this.destroyDialog = dialog.destroy.bind(dialog);
+            dialog.destroy = (...args) => { if (view?.handleBack?.()) return; this.destroyDialog?.(...args); };
+            dialog.element.classList.add('qingmo-dialog');
+            view = this.mount(dialog.element.querySelector('.qingmo-host'), 'fullscreen');
+            this.fullscreenView = view;
+        }
+        if (compose) this.fullscreenView?.compose();
+    }
+    close() { this.destroyDialog?.(); }
+    onLayoutReady() {
+        this.updateFloating();
+        if (this.settings.openOnStartup) this.open(true);
+    }
+    updateFloating() {
+        this.floating?.remove();
+        this.floating = null;
+        if (!this.mobile || !this.settings.floatingButton || this.disposed || this.dialog) return;
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'qingmo-floating';
+        button.setAttribute('aria-label', this.t('floatingCapture'));
+        button.textContent = '+';
+        button.style.cssText = 'position:fixed;right:20px;bottom:calc(72px + env(safe-area-inset-bottom));width:52px;height:52px;border-radius:50%;border:1px solid var(--b3-border-color);background:var(--b3-theme-primary);color:var(--b3-theme-on-primary);font-size:30px;z-index:100;';
+        button.addEventListener('click', () => this.open(true));
+        document.body.appendChild(button);
+        this.floating = button;
+    }
+    onunload() {
+        this.disposed = true;
+        this.close();
+        for (const view of Array.from(this.views || [])) this.unmount(view);
+        this.floating?.remove();
+        this.themeObserver?.disconnect();
+        if (this.refreshViews) {
+            this.eventBus.off('sync-end', this.refreshViews);
+            this.eventBus.off('mobile-keyboard-show', this.keyboardHandler);
+            this.eventBus.off('mobile-keyboard-hide', this.keyboardHandler);
+            document.removeEventListener('visibilitychange', this.foregroundHandler);
+            window.removeEventListener('focus', this.refreshViews);
+            window.visualViewport?.removeEventListener('resize', this.keyboardHandler);
+            window.visualViewport?.removeEventListener('scroll', this.keyboardHandler);
+        }
+    }
+};
