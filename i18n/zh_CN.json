@@ -66,6 +66,7 @@
   "untagged": "无标签",
   "edit": "编辑",
   "copy": "复制文本",
+  "copySelection": "复制所选文字",
   "openNative": "在思源中打开",
   "delete": "删除",
   "copied": "文本已复制",
@@ -112,6 +113,5 @@
   "reviewFailed": "回顾暂时没有加载成功",
   "retry": "重试",
   "views": "视角",
-  "editNative": "在思源中编辑",
   "removeDocumentExplanation": "只移除这篇笔记的「轻墨」文档标签，正文和其他标签保留。文中单独加入轻墨的内容会重新显示。"
 }
