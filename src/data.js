@@ -39,7 +39,7 @@ function transformProse(markdown, transform) {
 function normalizeTags(text) {
   return transformProse(String(text), part => part.replace(/(^|\s)#([^\s#]+)(#?)(?=\s|$)/g, (all, before, tag) => before + '#' + tag + '#'));
 }
-function editableMarkdown(markdown) {
+function editableMarkdown(markdown, rootId) {
   let text = String(markdown || '');
   // The superblock's own attributes are supplied separately on update.
   const wrapper = text.trim().match(/^(?:\{:[^\n]*\}\s*\n)?\{\{\{(?:row|col)\s*\n([\s\S]*)\n\}\}\}(?:\s*\n\{:[^\n]*\})?$/);
@@ -48,7 +48,10 @@ function editableMarkdown(markdown) {
   // generated identity fields, and never modify literal code.
   return transformProse(text, part => {
     const cleaned = part.replace(/\{:\s*([^\n]*?)\}/g, (all, attributes) => {
-      if (!/\bid="\d{14}-[a-z0-9]{7}"/.test(attributes)) return all;
+      const identity = attributes.match(/(?:^|\s)id="(\d{14}-[a-z0-9]{7})"/);
+      if (!identity) return all;
+      // The selected block's attributes are read and preserved by save(), not edited as prose.
+      if (identity[1] === rootId) return '';
       const remaining = attributes.replace(/(?:^|\s)(?:id|updated)="[^"]*"/g, '').trim();
       return remaining ? '{: ' + remaining + '}' : '';
     });
@@ -183,7 +186,7 @@ class MemoRepository {
   }
   async hydrate(row) {
     const result = await this.request('/api/block/getBlockKramdown', { id: row.id });
-    const markdown = editableMarkdown(result.kramdown);
+    const markdown = editableMarkdown(result.kramdown, row.id);
     const parsed = parseMemoMarkdown(markdown);
     return { ...row, markdown, content: parsed.text, tags: JSON.parse(row.tagsJSON||'[]'), images: allImagePaths(markdown), external: row.type!=='s' || row.added==='1' || row.marker!=='1' };
   }

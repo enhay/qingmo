@@ -1,5 +1,5 @@
 'use strict';
-const { Plugin, Dialog, openTab, openMobileFileById, getFrontend } = require('siyuan');
+const { Plugin, Dialog, Constants, openTab, openMobileFileById, getFrontend } = require('siyuan');
 
 const TAB_TYPE = 'qingmo-tab';
 const { MemoRepository, DEFAULT_SETTINGS } = require('./data');
@@ -109,7 +109,7 @@ module.exports = class QingMoPlugin extends Plugin {
     theme() { return window.siyuan.config.appearance.mode === 1 ? 'dark' : 'light'; }
     mount(container, mode) {
         if (this.disposed) return null;
-        const view = createView({ container, repository: this.repository, settings: this.settings, beforeCompose: () => { for (const other of this.views) if (other !== view && !other.releaseComposer()) return false; return true; }, saveSettings: async settings => { await this.saveData('settings.json', settings); Object.assign(this.settings, settings); this.updateFloating(); }, t: this.t, onClose: () => this.close(), mode, openBlock: id => { this.close(); if (this.mobile) openMobileFileById(this.app, id); else openTab({ app: this.app, doc: { id } }); }, renderMarkdown: markdown => { const lute = window.Lute.New(); lute.SetTag(true); lute.SetSanitize(true); return safeHTML(lute.MarkdownStr('qingmo', markdown)); } });
+        const view = createView({ container, repository: this.repository, settings: this.settings, beforeCompose: () => { for (const other of this.views) if (other !== view && !other.releaseComposer()) return false; return true; }, saveSettings: async settings => { await this.saveData('settings.json', settings); Object.assign(this.settings, settings); this.updateFloating(); }, t: this.t, onClose: () => this.close(), mode, openBlock: id => { this.close(); const action = [Constants.CB_GET_CONTEXT, Constants.CB_GET_HL]; if (this.mobile) openMobileFileById(this.app, id, action); else openTab({ app: this.app, doc: { id, action, zoomIn: false } }); }, renderMarkdown: markdown => { const lute = window.Lute.New(); lute.SetTag(true); lute.SetSanitize(true); return safeHTML(lute.MarkdownStr('qingmo', markdown)); } });
         this.views.add(view);
         view.setTheme(this.theme());
         return view;
