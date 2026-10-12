@@ -8,7 +8,7 @@ const { createView } = require('./ui');
 function safeHTML(html) {
     const template = document.createElement('template');
     template.innerHTML = html;
-    const allowed = new Set('P BR STRONG EM DEL S UL OL LI BLOCKQUOTE PRE CODE A IMG SPAN DIV H1 H2 H3 H4 H5 H6 HR TABLE THEAD TBODY TR TH TD'.split(' '));
+    const allowed = new Set('P BR STRONG B EM I U MARK DEL S UL OL LI BLOCKQUOTE PRE CODE A IMG SPAN DIV H1 H2 H3 H4 H5 H6 HR TABLE THEAD TBODY TR TH TD'.split(' '));
     for (const element of Array.from(template.content.querySelectorAll('*'))) {
         if (!allowed.has(element.tagName)) { element.remove(); continue; }
         for (const attribute of Array.from(element.attributes)) {
@@ -25,6 +25,19 @@ function safeHTML(html) {
         if (element.tagName === 'A') element.setAttribute('rel', 'noopener noreferrer');
     }
     return template.innerHTML;
+}
+
+function renderBlockDOM(dom) {
+    const template = document.createElement('template');
+    template.innerHTML = dom;
+    template.content.querySelectorAll('.protyle-attr,.protyle-icons').forEach(node => node.remove());
+    for (const node of Array.from(template.content.querySelectorAll('[data-type^="Node"]'))) {
+        if (node.dataset.type === 'NodeSuperBlock' || node.dataset.type === 'NodeDocument') { node.replaceWith(...node.childNodes); continue; }
+        for (const attribute of Array.from(node.attributes)) if (!['data-type', 'data-subtype', 'class'].includes(attribute.name)) node.removeAttribute(attribute.name);
+    }
+    const lute = window.Lute.New();
+    lute.SetTag(true); lute.SetMark(true);
+    return safeHTML(lute.BlockDOM2HTML(template.innerHTML));
 }
 
 module.exports = class QingMoPlugin extends Plugin {
@@ -110,7 +123,7 @@ module.exports = class QingMoPlugin extends Plugin {
     theme() { return window.siyuan.config.appearance.mode === 1 ? 'dark' : 'light'; }
     mount(container, mode) {
         if (this.disposed) return null;
-        const view = createView({ container, repository: this.repository, settings: this.settings, beforeCompose: () => { for (const other of this.views) if (other !== view && !other.releaseComposer()) return false; return true; }, saveSettings: async settings => { await this.saveData('settings.json', settings); Object.assign(this.settings, settings); this.updateFloating(); }, t: this.t, onClose: () => this.close(), mode, openBlock: id => { this.close(); const action = [Constants.CB_GET_CONTEXT, Constants.CB_GET_HL]; if (this.mobile) openMobileFileById(this.app, id, action); else openTab({ app: this.app, doc: { id, action, zoomIn: false } }); }, renderMarkdown: markdown => { const lute = window.Lute.New(); lute.SetTag(true); lute.SetSanitize(true); return safeHTML(lute.MarkdownStr('qingmo', markdown)); } });
+        const view = createView({ container, repository: this.repository, settings: this.settings, beforeCompose: () => { for (const other of this.views) if (other !== view && !other.releaseComposer()) return false; return true; }, saveSettings: async settings => { await this.saveData('settings.json', settings); Object.assign(this.settings, settings); this.updateFloating(); }, t: this.t, onClose: () => this.close(), mode, openBlock: id => { this.close(); const action = [Constants.CB_GET_CONTEXT, Constants.CB_GET_HL]; if (this.mobile) openMobileFileById(this.app, id, action); else openTab({ app: this.app, doc: { id, action, zoomIn: false } }); }, renderBlockDOM, renderMarkdown: markdown => { const lute = window.Lute.New(); lute.SetTag(true); lute.SetMark(true); lute.SetSanitize(true); return safeHTML(lute.MarkdownStr('qingmo', markdown)); } });
         this.views.add(view);
         view.setTheme(this.theme());
         return view;

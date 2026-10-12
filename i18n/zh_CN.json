@@ -113,5 +113,9 @@
   "reviewFailed": "回顾暂时没有加载成功",
   "retry": "重试",
   "views": "视角",
-  "removeDocumentExplanation": "只移除这篇笔记的「轻墨」文档标签，正文和其他标签保留。文中单独加入轻墨的内容会重新显示。"
+  "removeDocumentExplanation": "只移除这篇笔记的「轻墨」文档标签，正文和其他标签保留。文中单独加入轻墨的内容会重新显示。",
+  "underline": "下划线",
+  "highlight": "高亮",
+  "nativeEditRequired": "此内容包含原生结构，请在思源中编辑",
+  "createTag": "新建"
 }

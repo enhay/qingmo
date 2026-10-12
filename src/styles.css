@@ -552,7 +552,7 @@
 .qm-root .qm-card .qm-document-title{display:block;width:100%;min-height:44px;text-align:left;font-size:18px;font-weight:600;line-height:1.5;margin:2px 0 8px}
 .qm-sheet{container-type:inline-size}
 .qm-tools .qm-format-inline{display:none}
-@container (min-width:400px){
+@container (min-width:460px){
   .qm-tools .qm-format-inline{display:inline-flex}
   .qm-tools .qm-format-more{display:none}
 }
@@ -1115,3 +1115,28 @@ to {
   transform:rotate(180deg)}
 .qm-list-menu [aria-pressed=false] .qm-icon-check {
   visibility:hidden}
+
+.qm-input { overflow:auto; white-space:pre-wrap; overflow-wrap:anywhere; }
+.qm-input:empty::before { content:attr(data-placeholder); color:var(--qm-text-placeholder); pointer-events:none; }
+.qm-input p,.qm-input div { margin:0 0 8px; }
+.qm-input ul,.qm-input ol { padding-left:24px; margin:8px 0; }
+.qm-input blockquote { margin:8px 0; padding-left:12px; border-left:3px solid var(--qm-text-placeholder); }
+.qm-input img { max-width:100%; }
+.qm-input mark { background:#ffeb80; color:#252525; }
+.qm-input [data-type~=u] { text-decoration:underline; }
+.qm-input [data-type~=mark] { background:#ffeb80; color:#252525; }
+.qm-input .qm-editor-tag { color:#368bd6; font-style:normal; }
+.qm-tools [aria-pressed=true],.qm-tag-option[aria-selected=true] { color:var(--qm-brand-bright); background:var(--qm-fill); }
+.qm-input::highlight(qm-tag-input) { color:#368bd6; }
+.qm-body [data-type~=strong] { font-weight:bold; }
+.qm-body [data-type~=em] { font-style:italic; }
+.qm-body [data-type~=u] { text-decoration:underline; }
+.qm-body [data-type~=mark] { background:#ffeb80; color:#252525; }
+.qm-body [data-type~=s] { text-decoration:line-through; }
+.qm-root[data-layout=desktop] .qm-sheet { position:relative; left:auto; right:auto; bottom:auto; }
+.qm-root .qm-candidates { position:absolute; z-index:4; display:flex; flex-direction:column; flex-wrap:nowrap; min-width:160px; max-width:calc(100% - 16px); padding:6px; border:1px solid var(--qm-border); border-radius:10px; background:var(--qm-surface); box-shadow:0 4px 16px rgba(0,0,0,.14); }
+.qm-root .qm-candidates:empty { display:none; }
+.qm-root .qm-tag-option { display:flex; justify-content:space-between; align-items:center; gap:16px; text-align:left; min-height:32px; border-radius:6px; }
+.qm-tag-create { font-size:11px; color:var(--qm-text-placeholder); }
+
+@container (max-width:310px){.qm-tools{flex-wrap:wrap}.qm-tools .qm-divider{display:none}.qm-tools .qm-send{margin-left:auto}}

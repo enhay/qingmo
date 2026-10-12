@@ -191,10 +191,11 @@ class MemoRepository {
     return this.hydrate(rows[0]);
   }
   async hydrate(row) {
-    const result = await this.request('/api/block/getBlockKramdown', { id: row.id });
+    const [result, native] = await Promise.all([this.request('/api/block/getBlockKramdown', { id: row.id }), this.request('/api/block/getBlockDOM', { id: row.id })]);
+    if (typeof native.dom !== 'string') throw new Error('MEMO_INVALID_DOM');
     const markdown = editableMarkdown(result.kramdown, row.id, row.type==='d');
     const parsed = parseMemoMarkdown(markdown);
-    return { ...row, markdown, content: parsed.text, tags: JSON.parse(row.tagsJSON||'[]'), images: allImagePaths(markdown), external: row.type!=='s' || row.added==='1' || row.marker!=='1' };
+    return { ...row, markdown, dom: native.dom, content: parsed.text, tags: JSON.parse(row.tagsJSON||'[]'), images: allImagePaths(markdown), external: row.type!=='s' || row.added==='1' || row.marker!=='1' };
   }
   async list({ keyword = '', tag = '', kind = 'all', day = '', source = 'all', order = 'newest', offset = 0 } = {}) {
     const where = [];
@@ -341,4 +342,4 @@ class MemoRepository {
     } catch (error) { error.paths = unique(uploaded); error.uploaded = error.paths; throw error; }
   }
 }
-module.exports = { MemoRepository, DraftStore, parseMemoMarkdown, normalizeTags, DEFAULT_SETTINGS, dailyOrder };
+module.exports = { transformProse, MemoRepository, DraftStore, parseMemoMarkdown, normalizeTags, DEFAULT_SETTINGS, dailyOrder };

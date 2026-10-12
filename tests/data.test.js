@@ -3,6 +3,14 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const { normalizeTags, parseMemoMarkdown, DraftStore, MemoRepository } = require('../src/data');
 
+function blockProvider(kramdown, dom) {
+  return async path => {
+    if (path === '/api/block/getBlockKramdown') return { kramdown };
+    if (path === '/api/block/getBlockDOM') return { dom };
+    throw new Error('Unexpected request: ' + path);
+  };
+}
+
 test('速记标签转换为原生标签，同时保留 Markdown 与代码内容', () => {
   assert.equal(normalizeTags('#读书 #a/b\n正文 #已有#'), '#读书# #a/b#\n正文 #已有#');
   const markdown = '# 标题\n\nhttps://example.com/#anchor\n`#literal`\n\n```js\n#literal\n```';
@@ -17,7 +25,7 @@ test('多段原生速记回到编辑器时保留文字、列表和代码', () =>
 
 test('手动收录块的自身属性不进入卡片正文和编辑内容', async () => {
   const id = '20261011120000-aaaaaaa';
-  const repository = new MemoRepository(async () => ({ kramdown: '原始段落 #阅读#\n{: id="' + id + '" updated="20261011120000" custom-qingmo-memo="1" custom-qingmo-added="1" custom-owner="保留"}' }));
+  const repository = new MemoRepository(blockProvider('原始段落 #阅读#\n{: id="' + id + '" updated="20261011120000" custom-qingmo-memo="1" custom-qingmo-added="1" custom-owner="保留"}', '<div data-type="NodeParagraph"><div contenteditable="true">原始段落 <span data-type="tag">阅读</span></div></div>'));
   const memo = await repository.hydrate({ id, type: 'p', marker: '1', added: '1', tagsJSON: '["阅读"]' });
   assert.equal(memo.markdown, '原始段落 #阅读#');
   assert.deepEqual(parseMemoMarkdown(memo.markdown), { text: '原始段落 #阅读#', images: [] });
@@ -27,14 +35,14 @@ test('手动收录块的自身属性不进入卡片正文和编辑内容', async
 test('清理当前块元数据时保留子块属性和代码中的原文', async () => {
   const id = '20261011120000-aaaaaaa';
   const literal = '{: id="' + id + '" custom-qingmo-memo="示例"}';
-  const repository = new MemoRepository(async () => ({ kramdown: '{{{row\n子段落\n{: id="20261011120001-bbbbbbb" custom-owner="保留"}\n\n```text\n' + literal + '\n```\n}}}\n{: id="' + id + '" custom-qingmo-memo="1" custom-qingmo-added="1"}' }));
+  const repository = new MemoRepository(blockProvider('{{{row\n子段落\n{: id="20261011120001-bbbbbbb" custom-owner="保留"}\n\n```text\n' + literal + '\n```\n}}}\n{: id="' + id + '" custom-qingmo-memo="1" custom-qingmo-added="1"}', '<div data-type="NodeSuperBlock"><div data-type="NodeParagraph" custom-owner="保留"><div contenteditable="true">子段落</div></div><div data-type="NodeCodeBlock"><div contenteditable="true">{: custom-qingmo-memo="示例"}</div></div></div>'));
   const memo = await repository.hydrate({ id, type: 's', marker: '1', added: '1', tagsJSON: '[]' });
   assert.equal(memo.markdown, '子段落\n{: custom-owner="保留"}\n\n```text\n' + literal + '\n```');
 });
 
 test('整篇笔记预览保留标题和正文，内部块属性留在原文档中', async () => {
   const id = '20261011120000-aaaaaaa';
-  const repository = new MemoRepository(async () => ({ kramdown: '## 小标题\n{: id="20261011120001-bbbbbbb"}\n\n正文\n{: id="20261011120002-ccccccc" custom-qingmo-memo="1"}\n\n`{: custom-owner="示例"}`\n{: id="' + id + '" tags="轻墨,阅读" type="doc"}' }));
+  const repository = new MemoRepository(blockProvider('## 小标题\n{: id="20261011120001-bbbbbbb"}\n\n正文\n{: id="20261011120002-ccccccc" custom-qingmo-memo="1"}\n\n`{: custom-owner="示例"}`\n{: id="' + id + '" tags="轻墨,阅读" type="doc"}', '<div data-type="NodeHeading" data-subtype="h2"><div contenteditable="true">小标题</div></div><div data-type="NodeParagraph"><div contenteditable="true">正文</div></div>'));
   const memo = await repository.hydrate({ id, type: 'd', source: '原文档标题', tagsJSON: '["轻墨","阅读"]' });
   assert.equal(memo.markdown, '## 小标题\n\n正文\n\n`{: custom-owner="示例"}`');
   assert.equal(memo.source, '原文档标题');
