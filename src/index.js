@@ -1,5 +1,7 @@
 'use strict';
 const { Plugin, Dialog, openTab, openMobileFileById, getFrontend } = require('siyuan');
+
+const TAB_TYPE = 'qingmo-tab';
 const { MemoRepository, DEFAULT_SETTINGS } = require('./data');
 const { createView } = require('./ui');
 
@@ -49,6 +51,7 @@ module.exports = class QingMoPlugin extends Plugin {
         this.addCommand({ langKey: 'quickCapture', hotkey: '⌥⇧Q', callback: () => this.open(true) });
         const plugin = this;
         this.addDock({ type: 'qingmo', config: { position: 'RightTop', size: { width: 380, height: 0 }, icon: 'iconQingMo', title: this.t('pluginTitle') }, data: {}, init: function () { this.qingmoView = plugin.mount(this.element, 'dock'); }, destroy: function () { plugin.unmount(this.qingmoView); } });
+        this.addTab({ type: TAB_TYPE, init: function () { plugin.tabView = plugin.mount(this.element, 'tab'); }, destroy: function () { if (plugin.tabView) plugin.unmount(plugin.tabView); plugin.tabView = null; } });
         this.refreshViews = () => { for (const view of this.views) Promise.resolve(view.refresh()).catch(() => {}); };
         this.keyboardHandler = () => { for (const view of this.views) view.keyboardChanged(); };
         this.foregroundHandler = () => { if (document.visibilityState === 'visible') this.refreshViews(); };
@@ -73,15 +76,24 @@ module.exports = class QingMoPlugin extends Plugin {
     unmount(view) { if (view && this.views.delete(view)) view.destroy(); }
     open(compose = false) {
         if (this.disposed) return;
+        // 桌面端在思源标签页里打开，宽度够时用两栏布局；手机端全屏。
+        if (!this.mobile) {
+            const id = this.name + TAB_TYPE;
+            // 思源恢复布局时标签页是懒加载的，openTab 看不到它们，会再开一个；先激活已恢复的那个。
+            const restored = this.tabView ? null : Array.from(document.querySelectorAll('.layout-tab-bar .item[data-initdata]')).find(item => { try { return JSON.parse(item.dataset.initdata).customModelType === id; } catch (_) { return false; } });
+            const opened = restored ? Promise.resolve(restored.click()) : Promise.resolve(openTab({ app: this.app, custom: { icon: 'iconQingMo', title: this.t('pluginTitle'), data: {}, id } }));
+            opened.then(() => { if (compose) requestAnimationFrame(() => this.tabView?.compose()); });
+            return;
+        }
         if (!this.dialog) {
             for (const active of this.views) if (!active.releaseComposer()) return;
             let view;
-            const dialog = new Dialog({ title: this.t('pluginTitle'), content: '<div class="qingmo-host"></div>', width: this.mobile ? '100vw' : '420px', height: this.mobile ? '100dvh' : 'min(860px, calc(100vh - 80px))', hideCloseIcon: true, destroyCallback: () => { this.unmount(view); if (this.dialog === dialog) { this.dialog = null; this.fullscreenView = null; this.destroyDialog = null; this.updateFloating(); if (!this.disposed) this.refreshViews(); } } });
+            const dialog = new Dialog({ title: this.t('pluginTitle'), content: '<div class="qingmo-host"></div>', width: '100vw', height: '100dvh', hideCloseIcon: true, destroyCallback: () => { this.unmount(view); if (this.dialog === dialog) { this.dialog = null; this.fullscreenView = null; this.destroyDialog = null; this.updateFloating(); if (!this.disposed) this.refreshViews(); } } });
             this.dialog = dialog;
             this.updateFloating();
             this.destroyDialog = dialog.destroy.bind(dialog);
             dialog.destroy = (...args) => { if (view?.handleBack?.()) return; this.destroyDialog?.(...args); };
-            dialog.element.classList.add('qingmo-dialog', this.mobile ? 'qingmo-dialog--full' : 'qingmo-dialog--window');
+            dialog.element.classList.add('qingmo-dialog');
             view = this.mount(dialog.element.querySelector('.qingmo-host'), 'fullscreen');
             this.fullscreenView = view;
         }
