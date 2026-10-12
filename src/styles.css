@@ -154,6 +154,9 @@
   width:18px;
   height:18px}
 .qm-body {
+  /* SiYuan tab containers disable selection; memo text must remain selectable. */
+  -webkit-user-select:text;
+  user-select:text;
   margin-top:12px;
   font-size:15px;
   line-height:27px;
