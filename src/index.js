@@ -55,6 +55,47 @@ module.exports = class QingMoPlugin extends Plugin {
         this.refreshViews = () => { for (const view of this.views) Promise.resolve(view.refresh()).catch(() => {}); };
         this.keyboardHandler = () => { for (const view of this.views) view.keyboardChanged(); };
         this.foregroundHandler = () => { if (document.visibilityState === 'visible') this.refreshViews(); };
+        this.blockMenuHandler = event => {
+            const detail = event.detail;
+            const blocks = detail?.blockElements || [];
+            if (blocks.length !== 1) return;
+            const block = blocks[0], id = block?.getAttribute('data-node-id');
+            if (!id || block.getAttribute('data-type') === 'NodeDocument') return;
+            const hasTag = element => Array.from(element.querySelectorAll('[data-type~="tag"]')).some(tag => {
+                if (tag.textContent.replace(/^[\u2060\u200b#]+|[\u2060\u200b#]+$/g, '') !== '轻墨') return false;
+                const owner = tag.closest('[data-node-id]');
+                const parent = owner?.parentElement?.closest('[data-node-id]');
+                const candidate = owner?.getAttribute('data-type') === 'NodeParagraph' &&
+                    ['NodeListItem', 'NodeBlockquote', 'NodeSuperBlock'].includes(parent?.getAttribute('data-type')) ? parent : owner;
+                return candidate === element;
+            });
+            const collected = element => element.getAttribute('custom-qingmo-memo') === '1' || hasTag(element);
+            let ancestor = block.parentElement?.closest('[data-node-id]');
+            while (ancestor) {
+                if (ancestor.getAttribute('data-type') !== 'NodeHeading' && collected(ancestor)) return;
+                ancestor = ancestor.parentElement?.closest('[data-node-id]');
+            }
+            const remove = collected(block);
+            detail.menu.addItem({ icon: 'iconQingMo', label: this.t(remove ? 'removeMemo' : 'addMemo'), click: async () => {
+                try {
+                    const memo = await this.repository.get(id);
+                    if (remove) {
+                        if (!memo) return;
+                        const explanation = memo.marker === '1' && memo.tags.includes('轻墨') ? 'removeBothExplanation' : memo.tags.includes('轻墨') ? 'removeTagExplanation' : 'removeAttrExplanation';
+                        if (!window.confirm(this.t('removeConfirm') + '\n' + this.t(explanation))) return;
+                        await this.repository.remove(id);
+                    } else {
+                        if (!await this.repository.canAdd(id)) return;
+                        await this.repository.add(id);
+                    }
+                    this.refreshViews();
+                } catch (error) {
+                    console.error('QingMo block menu action failed', error);
+                    window.alert(this.t(remove ? 'removeFailed' : 'addFailed'));
+                }
+            } });
+        };
+        this.eventBus.on('click-blockicon', this.blockMenuHandler);
         this.eventBus.on('sync-end', this.refreshViews);
         this.eventBus.on('mobile-keyboard-show', this.keyboardHandler);
         this.eventBus.on('mobile-keyboard-hide', this.keyboardHandler);
@@ -125,6 +166,7 @@ module.exports = class QingMoPlugin extends Plugin {
         this.floating?.remove();
         this.themeObserver?.disconnect();
         if (this.refreshViews) {
+            this.eventBus.off('click-blockicon', this.blockMenuHandler);
             this.eventBus.off('sync-end', this.refreshViews);
             this.eventBus.off('mobile-keyboard-show', this.keyboardHandler);
             this.eventBus.off('mobile-keyboard-hide', this.keyboardHandler);

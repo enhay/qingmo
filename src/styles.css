@@ -999,3 +999,42 @@ to {
   left:auto;
   right:24px;
   width:min(420px,calc(100% - 48px))}
+.qm-source{display:block!important;width:auto;min-height:44px!important;padding:0 2px!important;color:var(--qm-text-secondary)!important;font-size:13px!important;text-align:left}
+.qm-review-active>.qm-main,.qm-review-active>.qm-sidebar,.qm-review-active>.qm-compose-overlay{display:none!important}
+.qm-review{height:100%;width:100%;overflow:auto;background:var(--qm-bg);padding:env(safe-area-inset-top,0px) 12px env(safe-area-inset-bottom,0px)}
+.qm-review-header{display:flex;align-items:center;justify-content:space-between;height:60px;max-width:760px;margin:auto;font-size:17px}
+.qm-review-header .qm-button{min-width:44px}
+.qm-view-hero{text-align:center;margin:80px auto 58px}
+.qm-view-hero h2{margin:24px 0 0;color:var(--qm-brand);font-size:20px;font-weight:600}
+.qm-view-list{max-width:640px;margin:0 auto;background:var(--qm-surface);border-radius:12px;padding:8px 12px}
+.qm-view-row{display:flex!important;width:100%;min-height:64px!important;text-align:left;gap:12px;padding:6px 16px!important;border-radius:8px}
+.qm-view-row:hover{background:var(--qm-fill)}
+.qm-view-symbol{width:34px;font-size:26px;text-align:center;align-self:center}
+.qm-view-words{display:flex;flex:1;flex-direction:column;gap:6px;min-width:0}
+.qm-view-words strong{font-size:16px;font-weight:600}
+.qm-view-words small{font-size:13px;color:var(--qm-text-secondary);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.qm-view-arrow{font-size:28px;color:var(--qm-text-secondary)}
+.qm-review-stack{position:relative;max-width:760px;margin:26px auto 0;padding:0 8px 16px}
+.qm-review-stack:before,.qm-review-stack:after{content:"";position:absolute;inset:8px 0 8px 16px;background:var(--qm-surface);border-radius:12px;box-shadow:0 4px 16px rgba(0,0,0,.08);transform:rotate(2deg)}
+.qm-review-stack:after{inset:4px 4px 12px 12px;transform:rotate(1deg)}
+.qm-review-stack>.qm-card{position:relative;z-index:1;margin:0;background:var(--qm-surface);box-shadow:0 6px 22px rgba(0,0,0,.12)}
+.qm-review-card .qm-body{max-height:min(55vh,560px);overflow:auto}
+.qm-review-controls{display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap;max-width:760px;margin:20px auto}
+.qm-review-controls .qm-button{padding:0 12px;border-radius:8px;background:var(--qm-surface)}
+.qm-review-empty{text-align:center;color:var(--qm-text-secondary);padding:80px 24px}
+.qm-root[data-layout=desktop] .qm-review{padding-left:24px;padding-right:24px}
+@media (prefers-reduced-motion:reduce){.qm-review .qm-card{animation:none}}
+.qm-root[data-layout=desktop]>.qm-review{grid-column:1 / -1;min-width:0;justify-self:stretch}
+.qm-root[data-layout=desktop] .qm-review .qm-button{min-width:44px;min-height:44px}
+.qm-review-dots{display:flex;justify-content:center;gap:10px;margin:20px auto}
+.qm-review-dot{width:8px;height:8px;border-radius:50%;background:var(--qm-text-disabled)}
+.qm-review-dot[aria-current=true]{background:var(--qm-brand-bright)}
+.qm-review-retry{display:block!important;margin:0 auto;padding:0 20px!important;border-radius:8px;background:var(--qm-surface)!important}
+.qm-root[data-layout=desktop] .qm-review-retry{min-height:44px}
+.qm-capsules{display:flex;gap:8px;overflow-x:auto;flex-shrink:0;padding:0 12px;margin-top:23px;scrollbar-width:none}
+.qm-capsules::-webkit-scrollbar{display:none}
+.qm-capsule{display:inline-flex!important;align-items:center;gap:6px;white-space:nowrap;min-width:0!important;min-height:44px!important;height:44px;padding:0 12px!important;border-radius:10px;background:transparent!important;font-size:13px!important;position:relative;isolation:isolate}
+.qm-capsule svg{width:18px;height:18px}
+.qm-root[data-layout=desktop] .qm-capsules{margin-top:12px;padding:0}
+.qm-view-mark{width:36px;height:36px;margin:0 auto;border-radius:50%;background:linear-gradient(135deg,var(--qm-link),var(--qm-brand-bright));-webkit-mask:radial-gradient(farthest-side,transparent calc(100% - 4px),#000 calc(100% - 3px));mask:radial-gradient(farthest-side,transparent calc(100% - 4px),#000 calc(100% - 3px));font-size:0}
+.qm-capsule:before{content:"";position:absolute;z-index:-1;inset:3px 0;background:var(--qm-surface);border-radius:10px}
