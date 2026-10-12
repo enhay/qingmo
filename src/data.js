@@ -196,7 +196,7 @@ class MemoRepository {
     const parsed = parseMemoMarkdown(markdown);
     return { ...row, markdown, content: parsed.text, tags: JSON.parse(row.tagsJSON||'[]'), images: allImagePaths(markdown), external: row.type!=='s' || row.added==='1' || row.marker!=='1' };
   }
-  async list({ keyword = '', tag = '', kind = 'all', day = '', offset = 0 } = {}) {
+  async list({ keyword = '', tag = '', kind = 'all', day = '', source = 'all', order = 'newest', offset = 0 } = {}) {
     const where = [];
     if (keyword) where.push(descendant(`instr(lower(c.content),lower(${literal(keyword)}))>0`));
     if (tag) where.push(descendant(`EXISTS (SELECT 1 FROM all_tags t WHERE t.block_id=c.id AND (t.name=${literal(tag)} OR instr(t.name,${literal(tag+'/')})=1))`));
@@ -204,6 +204,10 @@ class MemoRepository {
     if (kind === 'link') where.push(descendant(`EXISTS (SELECT 1 FROM spans sp WHERE sp.block_id=c.id AND (sp.type='a' OR instr(' '||sp.type||' ',' a ')>0))`));
     if (kind === 'untagged') where.push(`NOT ${descendant("EXISTS (SELECT 1 FROM all_tags t WHERE t.block_id=c.id)")}`);
     if (day) { if (!/^\d{8}$/.test(day)) throw Object.assign(new Error('INVALID_DAY'), { code: 'INVALID_DAY' }); where.push(`substr(m.created,1,8)=${literal(day)}`); }
+    const external = "(m.type<>'s' OR COALESCE(added.value,'')='1' OR COALESCE(marker.value,'')<>'1')";
+    if (source === 'external') where.push(external);
+    if (source === 'native') where.push(`NOT ${external}`);
+    const direction = order === 'oldest' ? 'ASC' : 'DESC';
     const start = Number.isSafeInteger(offset) && offset >= 0 ? offset : 0;
     const rows = await this.sql(`${TREE} SELECT m.id,m.created,m.type,m.root_id,r.content AS source,day.value AS qingmoDay,added.value AS added,marker.value AS marker,
       (SELECT json_group_array(DISTINCT t.name) FROM descendants d JOIN all_tags t ON t.block_id=d.id WHERE d.memo_id=m.id) AS tagsJSON
@@ -211,7 +215,7 @@ class MemoRepository {
       LEFT JOIN attributes day ON day.block_id=r.id AND day.name='custom-qingmo-day'
       LEFT JOIN attributes added ON added.block_id=m.id AND added.name='custom-qingmo-added'
       LEFT JOIN attributes marker ON marker.block_id=m.id AND marker.name='custom-qingmo-memo'
-      ${where.length ? 'WHERE ' + where.join(' AND ') : ''} ORDER BY m.created DESC,m.id DESC LIMIT 21 OFFSET ${start}`);
+      ${where.length ? 'WHERE ' + where.join(' AND ') : ''} ORDER BY m.created ${direction},m.id ${direction} LIMIT 21 OFFSET ${start}`);
     const items = await Promise.all(rows.slice(0,20).map(row=>this.hydrate(row)));
     return { items, hasMore: rows.length > 20 };
   }

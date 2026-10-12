@@ -1089,3 +1089,26 @@ to {
   height:36px}
 .qm-root[data-layout=desktop] .qm-nav-label {
   font-size:14px}
+
+.qm-title[aria-expanded=true]:after {
+  transform:rotate(225deg)}
+.qm-root .qm-list-menu {
+  width:240px}
+.qm-root .qm-list-menu .qm-dialog-action {
+  min-height:52px!important}
+.qm-list-menu .qm-dialog-action>span {
+  flex:1;
+  text-align:left}
+.qm-action-detail {
+  display:block;
+  margin-top:3px;
+  font-size:12px;
+  font-weight:400;
+  color:var(--qm-text-secondary)}
+.qm-list-menu .qm-icon-chevron {
+  width:16px;
+  height:16px}
+.qm-list-menu .qm-dialog-action>.qm-icon-chevron:first-child {
+  transform:rotate(180deg)}
+.qm-list-menu [aria-pressed=false] .qm-icon-check {
+  visibility:hidden}
