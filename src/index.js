@@ -75,12 +75,12 @@ module.exports = class QingMoPlugin extends Plugin {
         if (!this.dialog) {
             for (const active of this.views) if (!active.releaseComposer()) return;
             let view;
-            const dialog = new Dialog({ title: this.t('pluginTitle'), content: '<div class="qingmo-host"></div>', width: '100vw', height: '100dvh', hideCloseIcon: true, destroyCallback: () => { this.unmount(view); if (this.dialog === dialog) { this.dialog = null; this.fullscreenView = null; this.destroyDialog = null; this.updateFloating(); if (!this.disposed) this.refreshViews(); } } });
+            const dialog = new Dialog({ title: this.t('pluginTitle'), content: '<div class="qingmo-host"></div>', width: this.mobile ? '100vw' : '420px', height: this.mobile ? '100dvh' : 'min(860px, calc(100vh - 80px))', hideCloseIcon: true, destroyCallback: () => { this.unmount(view); if (this.dialog === dialog) { this.dialog = null; this.fullscreenView = null; this.destroyDialog = null; this.updateFloating(); if (!this.disposed) this.refreshViews(); } } });
             this.dialog = dialog;
             this.updateFloating();
             this.destroyDialog = dialog.destroy.bind(dialog);
             dialog.destroy = (...args) => { if (view?.handleBack?.()) return; this.destroyDialog?.(...args); };
-            dialog.element.classList.add('qingmo-dialog');
+            dialog.element.classList.add('qingmo-dialog', this.mobile ? 'qingmo-dialog--full' : 'qingmo-dialog--window');
             view = this.mount(dialog.element.querySelector('.qingmo-host'), 'fullscreen');
             this.fullscreenView = view;
         }

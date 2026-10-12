@@ -104,7 +104,7 @@
   transition:transform .3s cubic-bezier(.2,.8,.2,1),border-radius .3s;
   overflow:hidden}
 .qm-header {
-  padding:calc(env(safe-area-inset-top,0px) + 12px) 16px 0;
+  padding:max(env(safe-area-inset-top,0px),12px) 16px 0;
   display:flex;
   align-items:center;
   gap:8px;
@@ -118,10 +118,14 @@
   text-overflow:ellipsis;
   white-space:nowrap}
 .qm-title:after {
-  content:'⌄';
-  font-size:12px;
-  margin-left:7px;
-  color:var(--qm-text-secondary)}
+  content:'';
+  display:inline-block;
+  width:6px;
+  height:6px;
+  margin:0 0 4px 9px;
+  border-right:1.5px solid var(--qm-text-secondary);
+  border-bottom:1.5px solid var(--qm-text-secondary);
+  transform:rotate(45deg)}
 .qm-stream {
   flex:1;
   min-height:0;
@@ -147,7 +151,8 @@
   margin-right:-12px;
   color:var(--qm-text-secondary)!important}
 .qm-card-more svg {
-  width:16px}
+  width:18px;
+  height:18px}
 .qm-body {
   margin-top:12px;
   font-size:15px;
@@ -209,7 +214,7 @@
   object-fit:cover}
 .qm-entry {
   position:absolute;
-  bottom:calc(env(safe-area-inset-bottom,20px) + 4px);
+  bottom:calc(max(env(safe-area-inset-bottom,0px),16px) + 4px);
   left:28px;
   right:28px;
   height:48px;
@@ -223,13 +228,14 @@
 .qm-entry span {
   font-size:16px}
 .qm-entry svg {
-  width:16px;
+  width:18px;
+  height:18px;
   color:var(--qm-text)}
 .qm-status {
   font-size:12px;
   color:var(--qm-text-secondary);
   position:absolute;
-  bottom:calc(env(safe-area-inset-bottom,20px) + 62px);
+  bottom:calc(max(env(safe-area-inset-bottom,0px),16px) + 62px);
   left:12px;
   right:50px;
   text-align:center;
@@ -284,9 +290,10 @@
 .qm-sidebar-open .qm-main {
   transform:translateX(334px);
   border-radius:48px 0 0 48px;
+  box-shadow:0 0 32px rgba(0,0,0,.08);
   cursor:pointer}
 .qm-side-top {
-  padding:calc(env(safe-area-inset-top,0px) + 12px) 28px 0 30px;
+  padding:max(env(safe-area-inset-top,0px),12px) 28px 0 30px;
   display:flex;
   align-items:center;
   justify-content:space-between}
@@ -561,8 +568,6 @@
   width:100%;
   max-height:70vh;
   object-fit:contain}
-.qm-dock .qm-header {
-  padding-top:12px}
 .qm-dock .qm-sidebar-open .qm-main {
   transform:translateX(min(334px,calc(100% - 48px)))}
 @media(max-width:360px) {
@@ -580,7 +585,7 @@
   scroll-behavior:auto!important;
   animation:none!important}
 }
-.qingmo-dialog .b3-dialog__container {
+.qingmo-dialog--full .b3-dialog__container {
   width:100vw!important;
   height:100dvh!important;
   max-width:none!important;
@@ -608,10 +613,6 @@
   --qm-brand:var(--b3-theme-primary);
   --qm-link:var(--b3-theme-primary);
   --qm-fill:var(--b3-theme-surface-lighter)}
-.qm-fullscreen .qm-header {
-  padding-top:env(safe-area-inset-top,0px)}
-.qm-fullscreen .qm-side-top {
-  padding-top:env(safe-area-inset-top,0px)}
 .qm-months {
   position:relative}
 .qm-date-filter {
@@ -659,23 +660,47 @@
 /* Host editor defaults must not change the plugin's SVGs or full-screen bounds. */
 .qm-root svg {
   fill:none}
-.qingmo-dialog .b3-dialog__container {
+.qingmo-dialog--full .b3-dialog__container {
   border:0!important;
   box-shadow:none!important}
-.qm-exit {
-  position:static;
-  width:44px;
-  height:44px;
-  color:var(--qm-text-secondary)!important}
+.qingmo-dialog--window .b3-dialog__container {
+  max-width:calc(100vw - 32px)!important;
+  border:0!important;
+  border-radius:20px!important;
+  overflow:hidden!important;
+  padding:0!important}
 .qm-header {
   position:relative}
-.qm-fullscreen .qm-title {
+.qm-title {
   position:absolute;
   left:50%;
   transform:translateX(-50%);
-  max-width:calc(100% - 208px)}
-.qm-fullscreen .qm-header>.qm-round:last-child {
+  max-width:calc(100% - 152px)}
+.qm-header>.qm-round:last-child {
   margin-left:auto}
+.qm-side-actions {
+  display:flex;
+  height:44px;
+  border:1px solid var(--qm-border-strong);
+  border-radius:22px;
+  background:var(--qm-surface);
+  box-shadow:0 2px 12px rgba(0,0,0,.06);
+  overflow:hidden}
+.qm-root .qm-side-actions .qm-button {
+  min-height:42px;
+  height:42px;
+  width:48px;
+  color:var(--qm-text)}
+.qm-side-actions .qm-button:only-child {
+  width:42px}
+.qm-root .qm-input:focus-visible {
+  outline:none}
+.qm-root .qm-tools svg {
+  width:22px;
+  height:22px;
+  stroke-width:2}
+.qm-root svg.qm-icon-more {
+  stroke-width:4}
 .qm-notice {
   position:absolute;
   z-index:8;
@@ -731,3 +756,5 @@ to {
 .qm-root input, .qm-root textarea, .qm-root select {
   box-sizing: border-box;
 }
+.qm-root .qm-side-actions .qm-button:focus-visible {
+  outline-offset:-3px}
