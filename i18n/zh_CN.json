@@ -102,5 +102,7 @@
   "reviewPosition": "第 {current} 条，共 {total} 条",
   "reviewFailed": "回顾暂时没有加载成功",
   "retry": "重试",
-  "views": "视角"
+  "views": "视角",
+  "editNative": "在思源中编辑",
+  "removeDocumentExplanation": "只移除这篇笔记的「轻墨」文档标签，正文和其他标签保留。文中单独加入轻墨的内容会重新显示。"
 }

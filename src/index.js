@@ -61,6 +61,7 @@ module.exports = class QingMoPlugin extends Plugin {
             if (blocks.length !== 1) return;
             const block = blocks[0], id = block?.getAttribute('data-node-id');
             if (!id || block.getAttribute('data-type') === 'NodeDocument') return;
+            if (String(detail.protyle.background?.ial?.tags || '').split(',').some(tag => tag.trim() === '轻墨')) return;
             const hasTag = element => Array.from(element.querySelectorAll('[data-type~="tag"]')).some(tag => {
                 if (tag.textContent.replace(/^[\u2060\u200b#]+|[\u2060\u200b#]+$/g, '') !== '轻墨') return false;
                 const owner = tag.closest('[data-node-id]');

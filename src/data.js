@@ -39,7 +39,7 @@ function transformProse(markdown, transform) {
 function normalizeTags(text) {
   return transformProse(String(text), part => part.replace(/(^|\s)#([^\s#]+)(#?)(?=\s|$)/g, (all, before, tag) => before + '#' + tag + '#'));
 }
-function editableMarkdown(markdown, rootId) {
+function editableMarkdown(markdown, rootId, wholeDocument = false) {
   let text = String(markdown || '');
   // The superblock's own attributes are supplied separately on update.
   const wrapper = text.trim().match(/^(?:\{:[^\n]*\}\s*\n)?\{\{\{(?:row|col)\s*\n([\s\S]*)\n\}\}\}(?:\s*\n\{:[^\n]*\})?$/);
@@ -51,7 +51,8 @@ function editableMarkdown(markdown, rootId) {
       const identity = attributes.match(/(?:^|\s)id="(\d{14}-[a-z0-9]{7})"/);
       if (!identity) return all;
       // The selected block's attributes are read and preserved by save(), not edited as prose.
-      if (identity[1] === rootId) return '';
+      // Whole documents are read-only previews; child attributes stay in the source document.
+      if (wholeDocument || identity[1] === rootId) return '';
       const remaining = attributes.replace(/(?:^|\s)(?:id|updated)="[^"]*"/g, '').trim();
       return remaining ? '{: ' + remaining + '}' : '';
     });
@@ -132,7 +133,11 @@ class DraftStore {
   remove(id = 'new') { try { this.storage.removeItem('qingmo:draft:' + id); return true; } catch (_) { return false; } }
 }
 
-const MEMOS = `marked AS (
+const MEMOS = `all_tags AS (
+ SELECT block_id,content AS name FROM spans WHERE instr(' '||type||' ',' tag ')>0
+), tagged_docs AS (
+ SELECT DISTINCT b.id FROM blocks b JOIN all_tags t ON t.block_id=b.id WHERE b.type='d' AND t.name='轻墨'
+), marked AS (
  SELECT b.id,b.created,b.type,b.root_id FROM blocks b WHERE b.type<>'d' AND EXISTS
  (SELECT 1 FROM attributes a WHERE a.block_id=b.id AND a.name='custom-qingmo-memo' AND a.value='1')
 ), tag_candidates AS (
@@ -148,11 +153,12 @@ const MEMOS = `marked AS (
    (SELECT c.id FROM climb c JOIN tag_candidates outer_tag ON outer_tag.id=c.id WHERE c.candidate=t.id ORDER BY c.depth DESC LIMIT 1)) AS id
  FROM tag_candidates t
 ), memos AS (
- SELECT b.id,b.created,b.type,b.root_id FROM blocks b WHERE b.id IN (SELECT id FROM marked UNION SELECT id FROM tagged)
+ SELECT b.id,b.created,b.type,b.root_id FROM blocks b WHERE b.id IN (SELECT id FROM marked UNION SELECT id FROM tagged UNION SELECT id FROM tagged_docs)
+ AND (b.type='d' OR b.root_id NOT IN (SELECT id FROM tagged_docs))
 )`;
-const TREE = `WITH RECURSIVE ${MEMOS}, descendants(memo_id,id) AS (
- SELECT id,id FROM memos UNION ALL SELECT d.memo_id,b.id FROM blocks b JOIN descendants d ON b.parent_id=d.id JOIN blocks current ON current.id=d.id
- WHERE b.type<>'h' AND current.type<>'h'
+const TREE = `WITH RECURSIVE ${MEMOS}, descendants(memo_id,id,whole_doc) AS (
+ SELECT id,id,type='d' FROM memos UNION ALL SELECT d.memo_id,b.id,d.whole_doc FROM blocks b JOIN descendants d ON b.parent_id=d.id JOIN blocks current ON current.id=d.id
+ WHERE d.whole_doc OR (b.type<>'h' AND current.type<>'h')
 )`;
 const descendant = condition => `EXISTS (SELECT 1 FROM descendants d JOIN blocks c ON c.id=d.id WHERE d.memo_id=m.id AND (${condition}))`;
 function dailyOrder(ids, day) {
@@ -175,7 +181,7 @@ class MemoRepository {
   }
   async get(id) {
     const rows = await this.sql(`${TREE} SELECT m.id,m.created,m.type,m.root_id,r.content AS source,day.value AS qingmoDay,added.value AS added,marker.value AS marker,
-      (SELECT json_group_array(DISTINCT sp.content) FROM descendants d JOIN spans sp ON sp.block_id=d.id WHERE d.memo_id=m.id AND instr(' '||sp.type||' ',' tag ')>0) AS tagsJSON
+      (SELECT json_group_array(DISTINCT t.name) FROM descendants d JOIN all_tags t ON t.block_id=d.id WHERE d.memo_id=m.id) AS tagsJSON
       FROM memos m JOIN blocks r ON r.id=m.root_id
       LEFT JOIN attributes day ON day.block_id=r.id AND day.name='custom-qingmo-day'
       LEFT JOIN attributes added ON added.block_id=m.id AND added.name='custom-qingmo-added'
@@ -186,21 +192,21 @@ class MemoRepository {
   }
   async hydrate(row) {
     const result = await this.request('/api/block/getBlockKramdown', { id: row.id });
-    const markdown = editableMarkdown(result.kramdown, row.id);
+    const markdown = editableMarkdown(result.kramdown, row.id, row.type==='d');
     const parsed = parseMemoMarkdown(markdown);
     return { ...row, markdown, content: parsed.text, tags: JSON.parse(row.tagsJSON||'[]'), images: allImagePaths(markdown), external: row.type!=='s' || row.added==='1' || row.marker!=='1' };
   }
   async list({ keyword = '', tag = '', kind = 'all', day = '', offset = 0 } = {}) {
     const where = [];
     if (keyword) where.push(descendant(`instr(lower(c.content),lower(${literal(keyword)}))>0`));
-    if (tag) where.push(descendant(`EXISTS (SELECT 1 FROM spans sp WHERE sp.block_id=c.id AND instr(' '||sp.type||' ',' tag ')>0 AND (sp.content=${literal(tag)} OR instr(sp.content,${literal(tag+'/')})=1) )`));
+    if (tag) where.push(descendant(`EXISTS (SELECT 1 FROM all_tags t WHERE t.block_id=c.id AND (t.name=${literal(tag)} OR instr(t.name,${literal(tag+'/')})=1))`));
     if (kind === 'image') where.push(descendant(`EXISTS (SELECT 1 FROM spans sp WHERE sp.block_id=c.id AND sp.type='img')`));
     if (kind === 'link') where.push(descendant(`EXISTS (SELECT 1 FROM spans sp WHERE sp.block_id=c.id AND (sp.type='a' OR instr(' '||sp.type||' ',' a ')>0))`));
-    if (kind === 'untagged') where.push(`NOT ${descendant("EXISTS (SELECT 1 FROM spans sp WHERE sp.block_id=c.id AND instr(' '||sp.type||' ',' tag ')>0)")}`);
+    if (kind === 'untagged') where.push(`NOT ${descendant("EXISTS (SELECT 1 FROM all_tags t WHERE t.block_id=c.id)")}`);
     if (day) { if (!/^\d{8}$/.test(day)) throw Object.assign(new Error('INVALID_DAY'), { code: 'INVALID_DAY' }); where.push(`substr(m.created,1,8)=${literal(day)}`); }
     const start = Number.isSafeInteger(offset) && offset >= 0 ? offset : 0;
     const rows = await this.sql(`${TREE} SELECT m.id,m.created,m.type,m.root_id,r.content AS source,day.value AS qingmoDay,added.value AS added,marker.value AS marker,
-      (SELECT json_group_array(DISTINCT sp.content) FROM descendants d JOIN spans sp ON sp.block_id=d.id WHERE d.memo_id=m.id AND instr(' '||sp.type||' ',' tag ')>0) AS tagsJSON
+      (SELECT json_group_array(DISTINCT t.name) FROM descendants d JOIN all_tags t ON t.block_id=d.id WHERE d.memo_id=m.id) AS tagsJSON
       FROM memos m JOIN blocks r ON r.id=m.root_id
       LEFT JOIN attributes day ON day.block_id=r.id AND day.name='custom-qingmo-day'
       LEFT JOIN attributes added ON added.block_id=m.id AND added.name='custom-qingmo-added'
@@ -218,7 +224,7 @@ class MemoRepository {
     const rows=await this.sql(`WITH RECURSIVE ${MEMOS}, parents(id,parent_id,type) AS (
       SELECT x.id,x.parent_id,x.type FROM blocks x WHERE x.id=${literal(id)}
       UNION ALL SELECT p.id,p.parent_id,p.type FROM parents x JOIN blocks p ON p.id=x.parent_id WHERE p.type NOT IN ('d','h')
-    ) SELECT 1 AS yes FROM blocks b WHERE b.id=${literal(id)} AND b.type<>'d'
+    ) SELECT 1 AS yes FROM blocks b WHERE b.id=${literal(id)} AND b.type<>'d' AND b.root_id NOT IN (SELECT id FROM tagged_docs)
       AND NOT EXISTS (SELECT 1 FROM parents x JOIN memos m ON m.id=x.id) LIMIT 1`);
     return rows.length>0;
   }
@@ -231,6 +237,11 @@ class MemoRepository {
     const memo=await this.get(id);
     if (!memo) throw Object.assign(new Error('MEMO_NOT_FOUND'),{code:'MEMO_NOT_FOUND'});
     const attrs=await this.request('/api/attr/getBlockAttrs',{id});
+    if (memo.type==='d') {
+      const tags=String(attrs.tags||'').split(',').filter(value=>value.trim()!=='轻墨').join(',');
+      await this.request('/api/attr/setBlockAttrs',{id,attrs:{tags}});
+      return {id};
+    }
     const leaves=await this.sql(`WITH RECURSIVE nodes(id) AS (SELECT ${literal(id)} UNION ALL SELECT b.id FROM blocks b JOIN nodes n ON b.parent_id=n.id JOIN blocks current ON current.id=n.id WHERE b.type<>'h' AND current.type<>'h') SELECT DISTINCT n.id FROM nodes n JOIN spans sp ON sp.block_id=n.id WHERE instr(' '||sp.type||' ',' tag ')>0 AND sp.content='轻墨'`);
     for (const row of leaves) {
       const result=await this.request('/api/block/getBlockKramdown',{id:row.id});
@@ -244,7 +255,7 @@ class MemoRepository {
     const today = new Date();
     const start = new Date(today.getFullYear(), today.getMonth(), today.getDate());
     start.setDate(start.getDate() - start.getDay() - 77);
-    const nativeTags = `${TREE}, native_tags AS (SELECT DISTINCT d.memo_id,sp.content AS name,m.created FROM descendants d JOIN memos m ON m.id=d.memo_id JOIN spans sp ON sp.block_id=d.id WHERE instr(' '||sp.type||' ',' tag ')>0 AND sp.content<>'')`;
+    const nativeTags = `${TREE}, native_tags AS (SELECT DISTINCT d.memo_id,t.name,m.created FROM descendants d JOIN memos m ON m.id=d.memo_id JOIN all_tags t ON t.block_id=d.id WHERE t.name<>'')`;
     const summaryRows = await this.sql(`${nativeTags} SELECT (SELECT count(*) FROM memos) AS memoCount,(SELECT min(created) FROM memos) AS firstCreated,count(DISTINCT name) AS tagCount FROM native_tags LIMIT 1`);
     const heatRows = await this.sql(`WITH RECURSIVE ${MEMOS} SELECT substr(created,1,8) AS date,count(*) AS count FROM memos WHERE substr(created,1,8)>=${literal(localDay(start))} AND substr(created,1,8)<=${literal(localDay(today))} GROUP BY substr(created,1,8) LIMIT 84`);
     // Expand native tags into ancestors in SQLite and deduplicate each memo

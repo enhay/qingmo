@@ -32,6 +32,28 @@ test('清理当前块元数据时保留子块属性和代码中的原文', async
   assert.equal(memo.markdown, '子段落\n{: custom-owner="保留"}\n\n```text\n' + literal + '\n```');
 });
 
+test('整篇笔记预览保留标题和正文，内部块属性留在原文档中', async () => {
+  const id = '20261011120000-aaaaaaa';
+  const repository = new MemoRepository(async () => ({ kramdown: '## 小标题\n{: id="20261011120001-bbbbbbb"}\n\n正文\n{: id="20261011120002-ccccccc" custom-qingmo-memo="1"}\n\n`{: custom-owner="示例"}`\n{: id="' + id + '" tags="轻墨,阅读" type="doc"}' }));
+  const memo = await repository.hydrate({ id, type: 'd', source: '原文档标题', tagsJSON: '["轻墨","阅读"]' });
+  assert.equal(memo.markdown, '## 小标题\n\n正文\n\n`{: custom-owner="示例"}`');
+  assert.equal(memo.source, '原文档标题');
+  assert.equal(memo.external, true);
+});
+
+test('整篇笔记移出仅取消文档的精确轻墨标签，其余属性保留', async () => {
+  const id = '20261011120000-aaaaaaa';
+  const attrs = { id, tags: '轻墨,阅读,轻墨/项目,非轻墨,轻墨', title: '保留标题', 'custom-owner': '保留' };
+  const repository = new MemoRepository(async (path, body) => {
+    if (path === '/api/attr/getBlockAttrs') return { ...attrs };
+    if (path === '/api/attr/setBlockAttrs') { Object.assign(attrs, body.attrs); return null; }
+    throw new Error('Unexpected content write: ' + path);
+  });
+  repository.get = async () => ({ id, type: 'd', external: true });
+  await repository.remove(id);
+  assert.deepEqual(attrs, { id, tags: '阅读,轻墨/项目,非轻墨', title: '保留标题', 'custom-owner': '保留' });
+});
+
 test('新建和不同块的草稿分开存储，仅成功发送的草稿被清理', () => {
   const values = new Map();
   const storage = { getItem: key => values.get(key) || null, setItem: (key, value) => values.set(key, value), removeItem: key => values.delete(key) };

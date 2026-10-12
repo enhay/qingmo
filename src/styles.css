@@ -539,6 +539,20 @@
   width:100%;
   justify-content:flex-start;
   padding:0 8px!important}
+.qm-action-backdrop{background:transparent;display:block;padding:0}
+.qm-action-panel{position:absolute;width:208px;max-width:calc(100% - 16px);max-height:calc(100% - 16px);padding:6px;border:1px solid var(--qm-border);border-radius:12px;box-shadow:0 8px 28px rgba(0,0,0,.14)}
+.qm-root .qm-action-panel .qm-dialog-action{min-height:44px;gap:12px;border-radius:7px;padding:0 12px!important;font-size:14px;white-space:nowrap}
+.qm-action-panel .qm-dialog-action:hover,.qm-action-panel .qm-dialog-action:focus-visible{background:var(--qm-fill)}
+.qm-action-panel svg{width:18px;height:18px;flex:none;color:var(--qm-text-secondary)}
+.qm-action-panel .qm-danger svg{color:inherit}
+.qm-action-separator{height:1px;background:var(--qm-border);margin:5px 6px}
+.qm-root .qm-card .qm-document-title{display:block;width:100%;min-height:44px;text-align:left;font-size:18px;font-weight:600;line-height:1.5;margin:2px 0 8px}
+.qm-sheet{container-type:inline-size}
+.qm-tools .qm-format-inline{display:none}
+@container (min-width:400px){
+  .qm-tools .qm-format-inline{display:inline-flex}
+  .qm-tools .qm-format-more{display:none}
+}
 .qm-primary {
   background:var(--qm-brand)!important;
   color:white!important;
@@ -918,9 +932,10 @@ to {
   margin-left:-6px;
   gap:2px}
 .qm-root[data-layout=desktop] .qm-tools .qm-button {
-  width:32px;
-  min-width:32px;
-  height:32px;
+  width:44px;
+  min-width:44px;
+  height:44px;
+  min-height:44px;
   border-radius:6px;
   color:var(--qm-text-secondary)}
 .qm-root[data-layout=desktop] .qm-tools .qm-button:not(:disabled):hover {
@@ -940,8 +955,8 @@ to {
 .qm-root[data-layout=desktop] .qm-tools .qm-send {
   width:44px;
   min-width:44px;
-  height:28px;
-  min-height:28px;
+  height:44px;
+  min-height:44px;
   border-radius:6px;
   color:#fff}
 .qm-root[data-layout=desktop] .qm-tools .qm-send svg {
