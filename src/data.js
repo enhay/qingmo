@@ -169,7 +169,7 @@ function dailyOrder(ids, day) {
  return result;
 }
 class MemoRepository {
-  constructor(request) { this.request = request; }
+  constructor(request) { this.request = request; this.history = null; }
   async sql(stmt) {
     // Native writes queue transactions and indexing separately from API success.
     await this.request('/api/sqlite/flushTransaction', {});
@@ -293,11 +293,16 @@ class MemoRepository {
     if (id) {
       const rows = await this.sql(`WITH RECURSIVE ${MEMOS} SELECT id,type FROM memos WHERE id=${literal(id)} LIMIT 1`);
       if (!rows.length) throw Object.assign(new Error('MEMO_NOT_FOUND'), { code: 'MEMO_NOT_FOUND' });
+      const current=await this.get(id);
+      const original=parseMemoMarkdown(current.markdown);
+      const proposed=parseMemoMarkdown(text);
+      if(normalizeTags(original.text)===normalizeTags(proposed.text)&&JSON.stringify(original.images)===JSON.stringify([...proposed.images,...images]))return {id};
       attrs = { ...await this.request('/api/attr/getBlockAttrs', { id }), id };
       if (rows[0].type==='p') {
         if (images.length || /\n\s*\n/.test(text) || /(?:^|\n)\s*(?:[-*+] |\d+\. |>|#{1,6} |```|~~~)/.test(text)) throw Object.assign(new Error('MEMO_STRUCTURED_EDIT'),{code:'MEMO_STRUCTURED_EDIT'});
         const ial = Object.entries(attrs).filter(([key]) => /^[\w-]+$/.test(key)).map(([key,value]) => `${key}="${String(value).replace(/&/g,'&amp;').replace(/"/g,'&quot;')}"`).join(' ');
         const body=normalizeTags(text)+images.map(path=>'\n\n![]('+path.replace(/ /g,'%20')+')').join('');
+        if(this.history){if(this.history.sameContent(current,body+'\n{: '+ial+'}'))return {id};await this.history.snapshot(current);}
         await this.request('/api/block/updateBlock',{id,dataType:'markdown',data:body+'\n{: '+ial+'}'});
         return {id};
       }
@@ -307,7 +312,7 @@ class MemoRepository {
     const body = normalizeTags(parsed.text) + [...parsed.images, ...images].map(path => '\n\n![](' + path.replace(/ /g, '%20') + ')').join('');
     const ial = Object.entries(attrs).filter(([key]) => /^[\w-]+$/.test(key)).map(([key, value]) => `${key}="${String(value).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/\n/g, '&#10;')}"`).join(' ');
     const data = `{{{row\n${body}\n}}}\n{: ${ial}}`;
-    if (id) { await this.request('/api/block/updateBlock', { id, dataType: 'markdown', data }); return { id }; }
+    if (id) { if(this.history){const current=await this.get(id);if(this.history.sameContent(current,data))return {id};await this.history.snapshot(current);} await this.request('/api/block/updateBlock', { id, dataType: 'markdown', data }); return { id }; }
     const day = localDay(date);
     const docs = await this.sql(`SELECT b.id FROM blocks b JOIN attributes a ON a.block_id=b.id WHERE b.type='d' AND a.name='custom-qingmo-day' AND a.value=${literal(day)} ORDER BY b.created,b.id LIMIT 1`);
     let parentID = docs[0] && docs[0].id;

@@ -117,5 +117,21 @@
   "underline": "下划线",
   "highlight": "高亮",
   "nativeEditRequired": "此内容包含原生结构，请在思源中编辑",
-  "createTag": "新建"
+  "createTag": "新建",
+  "history": "历史版本",
+  "historyTimes": "版本时间",
+  "historyVersion": "查看历史版本",
+  "historyBack": "返回版本列表",
+  "historyRestore": "恢复此版本",
+  "historyCopy": "另存为新速记",
+  "historyEmpty": "暂无历史版本",
+  "historyReadFailed": "历史版本读取失败，请重试",
+  "historySnapshotFailed": "未能保存当前历史版本，笔记未被修改，草稿已保留",
+  "historyWriteFailed": "历史版本保存失败，请重试",
+  "historyCopied": "已另存为新速记",
+  "historyRestored": "已恢复此版本",
+  "historyNativeRequired": "此内容包含复杂结构，请在思源中查看和处理历史版本。",
+  "historyAssetMissing": "历史图片资源无法加载",
+  "historyReplacesDraftConfirm": "这条笔记有未发送的草稿。恢复历史版本会替换该草稿，是否继续？",
+  "historyRetention": "历史版本由思源保存，保留期限随思源设置。"
 }

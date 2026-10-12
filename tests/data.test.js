@@ -85,6 +85,21 @@ test('存储不可用或内容损坏时草稿操作返回失败，不中断记�
   }
 });
 
+test('修改已有笔记时历史留存失败，不覆盖原内容', async () => {
+  const id = '20261012135939-c5dplzm';
+  const persisted = { id, content: '原内容', attrs: { id, 'custom-qingmo-memo': '1' } };
+  const repository = new MemoRepository(async (path, body) => {
+    if (path === '/api/attr/getBlockAttrs') return { ...persisted.attrs };
+    if (path === '/api/block/updateBlock') { persisted.content = body.data; return null; }
+    throw new Error('Unexpected request: ' + path);
+  });
+  repository.sql = async () => [{ id, type: 'p' }];
+  repository.get = async () => ({ id, type: 'p', markdown: persisted.content, dom: '<div data-type="NodeParagraph"><div contenteditable="true">原内容</div></div>' });
+  repository.history = { sameContent: () => false, snapshot: async () => { throw Object.assign(new Error('未生成历史'), { code: 'HISTORY_SNAPSHOT_FAILED' }); } };
+  await assert.rejects(repository.save({ id, text: '修改后内容' }, {}), { code: 'HISTORY_SNAPSHOT_FAILED' });
+  assert.deepEqual(persisted, { id, content: '原内容', attrs: { id, 'custom-qingmo-memo': '1' } });
+});
+
 test('不同长度代码围栏内的标签、图片源码和空行保持原样', () => {
   const body = '````md\n```\n#literal\n\n\n![source](assets/example.png)\n````';
   assert.equal(normalizeTags(body), body);

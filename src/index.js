@@ -3,6 +3,7 @@ const { Plugin, Dialog, Constants, openTab, openMobileFileById, getFrontend } = 
 
 const TAB_TYPE = 'qingmo-tab';
 const { MemoRepository, DEFAULT_SETTINGS } = require('./data');
+const { MemoHistory } = require('./history');
 const { createView } = require('./ui');
 
 function safeHTML(html) {
@@ -13,7 +14,7 @@ function safeHTML(html) {
         if (!allowed.has(element.tagName)) { element.remove(); continue; }
         for (const attribute of Array.from(element.attributes)) {
             const name = attribute.name.toLowerCase();
-            if (!['href', 'src', 'alt', 'title', 'class', 'data-type', 'data-content'].includes(name)) element.removeAttribute(attribute.name);
+            if (!['href', 'src', 'alt', 'title', 'start', 'class', 'data-type', 'data-content'].includes(name)) element.removeAttribute(attribute.name);
         }
         for (const name of ['href', 'src']) {
             const value = element.getAttribute(name);
@@ -33,7 +34,7 @@ function renderBlockDOM(dom) {
     template.content.querySelectorAll('.protyle-attr,.protyle-icons').forEach(node => node.remove());
     for (const node of Array.from(template.content.querySelectorAll('[data-type^="Node"]'))) {
         if (node.dataset.type === 'NodeSuperBlock' || node.dataset.type === 'NodeDocument') { node.replaceWith(...node.childNodes); continue; }
-        for (const attribute of Array.from(node.attributes)) if (!['data-type', 'data-subtype', 'class'].includes(attribute.name)) node.removeAttribute(attribute.name);
+        for (const attribute of Array.from(node.attributes)) if (!['data-type', 'data-subtype', 'data-marker', 'class'].includes(attribute.name)) node.removeAttribute(attribute.name);
     }
     const lute = window.Lute.New();
     lute.SetTag(true); lute.SetMark(true);
@@ -54,6 +55,7 @@ module.exports = class QingMoPlugin extends Plugin {
             if (envelope.code !== 0) throw new Error(envelope.msg || this.t('requestFailed', { code: envelope.code }));
             return envelope.data;
         });
+        this.repository.history = new MemoHistory(this.repository, document);
         const saved = await this.loadData('settings.json');
         if (saved && typeof saved === 'object' && !Array.isArray(saved)) Object.assign(this.settings, saved);
         if (this.disposed) return;
