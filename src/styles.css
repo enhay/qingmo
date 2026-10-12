@@ -1053,3 +1053,39 @@ to {
 .qm-root[data-layout=desktop] .qm-capsules{margin-top:12px;padding:0}
 .qm-view-mark{width:36px;height:36px;margin:0 auto;border-radius:50%;background:linear-gradient(135deg,var(--qm-link),var(--qm-brand-bright));-webkit-mask:radial-gradient(farthest-side,transparent calc(100% - 4px),#000 calc(100% - 3px));mask:radial-gradient(farthest-side,transparent calc(100% - 4px),#000 calc(100% - 3px));font-size:0}
 .qm-capsule:before{content:"";position:absolute;z-index:-1;inset:3px 0;background:var(--qm-surface);border-radius:10px}
+
+.qm-root .qm-nav-all {
+  display:flex;
+  padding:0!important;
+  gap:0}
+.qm-root .qm-nav-disclosure {
+  position:relative;
+  flex:0 0 48px;
+  height:44px;
+  color:inherit}
+.qm-root .qm-nav-label {
+  flex:1;
+  height:100%;
+  justify-content:flex-start;
+  padding:0 12px 0 0;
+  font-size:15px;
+  color:inherit}
+.qm-nav-disclosure .qm-icon-triangle {
+  display:none;
+  fill:currentColor;
+  stroke:none}
+.qm-nav-all:hover .qm-icon-grid,
+.qm-nav-all:focus-within .qm-icon-grid,
+.qm-nav-disclosure[aria-expanded=true] .qm-icon-grid {
+  display:none}
+.qm-nav-all:hover .qm-icon-triangle,
+.qm-nav-all:focus-within .qm-icon-triangle,
+.qm-nav-disclosure[aria-expanded=true] .qm-icon-triangle {
+  display:block}
+.qm-nav-disclosure[aria-expanded=true] .qm-icon-triangle {
+  transform:rotate(90deg)}
+.qm-root[data-layout=desktop] .qm-nav-disclosure {
+  flex-basis:38px;
+  height:36px}
+.qm-root[data-layout=desktop] .qm-nav-label {
+  font-size:14px}

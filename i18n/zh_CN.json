@@ -52,6 +52,7 @@
   "heatDay": "{date}，{count} 条速记",
   "month": "{month}月",
   "all": "全部笔记",
+  "noteFilters": "展开或收起笔记筛选",
   "image": "有图片",
   "link": "有链接",
   "untagged": "无标签",
