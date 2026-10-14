@@ -1,4 +1,4 @@
-import { Plugin, Dialog, Constants, openTab, openMobileFileById, getFrontend } from 'siyuan';
+import { Plugin, Dialog, Constants, openTab, openMobileFileById, getFrontend, openSetting } from 'siyuan';
 import './styles/global.css';
 import { createSharedState } from './state/shared.svelte.js';
 import { mount, unmount } from 'svelte';
@@ -6,6 +6,9 @@ import FloatingCapture from './components/FloatingCapture.svelte';
 
 const TAB_TYPE = 'qingmo-tab';
 import { MemoRepository, DEFAULT_SETTINGS } from './core/data.js';
+import { InsightService } from './core/insights.js';
+import { createEditor } from './editor/editor.js';
+import { transcribeAudio } from './core/transcription.js';
 import { MemoHistory } from './core/history.js';
 import { createView } from './views/mount.js';
 
@@ -17,20 +20,43 @@ export default class QingMoPlugin extends Plugin {
         this.disposed = false;
 
         this.t = (key, values = {}) => String(this.i18n[key] || key).replace(/\{(\w+)\}/g, (_, name) => values[name] == null ? `{${name}}` : String(values[name]));
-        this.repository = new MemoRepository(async (path, body = {}) => {
+        this.request = async (path, body = {}, { signal } = {}) => {
             const multipart = typeof FormData !== 'undefined' && body instanceof FormData;
-            const response = await fetch(path, { method: 'POST', headers: multipart ? undefined : { 'Content-Type': 'application/json' }, body: multipart ? body : JSON.stringify(body) });
+            const response = await fetch(path, { method: 'POST', headers: multipart ? undefined : { 'Content-Type': 'application/json' }, body: multipart ? body : JSON.stringify(body), signal });
             if (!response.ok) throw new Error(this.t('requestFailed', { code: response.status }));
             const envelope = await response.json();
             if (envelope.code !== 0) throw new Error(envelope.msg || this.t('requestFailed', { code: envelope.code }));
             return envelope.data;
-        });
+        };
+        this.repository = new MemoRepository(this.request);
         this.repository.history = new MemoHistory(this.repository, document);
         const saved = await this.loadData('settings.json');
         this.shared = createSharedState({
             initial: saved,
-            persist: settings => this.saveData('settings.json', settings),
+            persist: async settings => {
+                const response = await this.saveData('settings.json', settings);
+                if (response?.code) throw Object.assign(new Error('SETTINGS_SAVE_FAILED'), {code:'SETTINGS_SAVE_FAILED'});
+            },
             onSaved: () => { this.updateFloating(); this.refreshViews?.(); }
+        });
+        this.insights = new InsightService({
+            repository: this.repository, request: this.request, document,
+            getModel: async () => {
+                const { conf } = await this.request('/api/system/getConf');
+                const ai = conf.ai, id = ai?.editing?.modelId;
+                for (const provider of ai?.providers || []) {
+                    if (provider.enabled === false) continue;
+                    const model = provider.models?.find(item => item.id === id);
+                    if (model) return model.name || model.id;
+                }
+                return '';
+            },
+            loadResource: async path => {
+                const response = await fetch(`/plugins/${this.name}/skills/qingmo-insights/${path}`);
+                if (!response.ok) throw Object.assign(new Error('INSIGHT_METHOD_MISSING'), { code: 'INSIGHT_METHOD_MISSING' });
+                return response.text();
+            },
+            onChange: state => this.shared.setInsight(state)
         });
         if (this.disposed) return;
         this.mobile = ['mobile', 'browser-mobile'].includes(getFrontend());
@@ -100,10 +126,36 @@ export default class QingMoPlugin extends Plugin {
     theme() { return window.siyuan.config.appearance.mode === 1 ? 'dark' : 'light'; }
     mount(container, mode) {
         if (this.disposed) return null;
-        const view = createView({ container, repository: this.repository, shared: this.shared, beforeCompose: () => { for (const other of this.views) if (other !== view && !other.releaseComposer()) return false; return true; }, t: this.t, onClose: () => this.close(), mode, openBlock: id => { this.close(); const action = [Constants.CB_GET_CONTEXT, Constants.CB_GET_HL]; if (this.mobile) openMobileFileById(this.app, id, action); else openTab({ app: this.app, doc: { id, action, zoomIn: false } }); }, renderBlockDOM, renderMarkdown: markdown => { const lute = window.Lute.New(); lute.SetTag(true); lute.SetMark(true); lute.SetSanitize(true); return safeHTML(lute.MarkdownStr('qingmo', markdown)); } });
+        const view = createView({ container, request: this.request, insights: this.insights, openAISettings: () => openSetting(this.app), blockExists: async id => /^\d{14}-[a-z0-9]{7}$/.test(id) && (await this.repository.sql("SELECT id FROM blocks WHERE id='" + id + "' LIMIT 1")).length > 0, transcribeMemo: id => this.transcribeMemo(id), flushDrafts: () => { for (const active of this.views) active.flushDraft?.(); }, repository: this.repository, shared: this.shared, beforeCompose: () => { for (const other of this.views) if (other !== view && !other.releaseComposer()) return false; return true; }, t: this.t, onClose: () => this.close(), mode, openBlock: id => { this.close(); const action = [Constants.CB_GET_CONTEXT, Constants.CB_GET_HL]; if (this.mobile) openMobileFileById(this.app, id, action); else openTab({ app: this.app, doc: { id, action, zoomIn: false } }); }, renderBlockDOM, renderMarkdown: markdown => { const lute = window.Lute.New(); lute.SetTag(true); lute.SetMark(true); lute.SetSanitize(true); return safeHTML(lute.MarkdownStr('qingmo', markdown)); } });
         this.views.add(view);
         view.setTheme(this.theme());
         return view;
+    }
+    async transcribeMemo(id) {
+        if (this.transcribing?.has(id)) throw Object.assign(new Error('TRANSCRIPTION_BUSY'), {code:'TRANSCRIPTION_BUSY'});
+        this.transcribing ||= new Set(); this.transcribing.add(id);
+        this.shared.setTranscription(id, 'transcribing');
+        const element = document.createElement('div');
+        const editor = createEditor({element, renderMarkdown: markdown => {const lute=window.Lute.New();lute.SetTag(true);lute.SetMark(true);return safeHTML(lute.MarkdownStr('qingmo',markdown));}});
+        try {
+            const memo = await this.repository.get(id);
+            if (!memo || !['s','p'].includes(memo.type) || !editor.canEdit(memo.markdown)) throw Object.assign(new Error('NATIVE_EDIT_REQUIRED'), {code:'NATIVE_EDIT_REQUIRED'});
+            editor.load(memo.markdown);
+            let baseline = memo.markdown;
+            const segments = editor.audioSegments().filter(item=>item.pending);
+            for (const segment of segments) {
+                const response = await fetch('/'+segment.path.replace(/^\//,''));
+                if (!response.ok) throw new Error('network');
+                const text = await transcribeAudio(await response.blob(), {request:this.request,secretId:this.settings.tencentSecretId,secretKey:this.settings.tencentSecretKey});
+                if (this.disposed) return;
+                const current = await this.repository.get(id);
+                if (!current || current.markdown !== baseline) throw Object.assign(new Error('MEMO_CHANGED'), {code:'MEMO_CHANGED'});
+                editor.applyTranscription(segment.key,text,{atCursor:false});
+                await this.repository.save({id,text:editor.value(),images:[]},this.settings);
+                baseline = (await this.repository.get(id)).markdown;
+            }
+            this.refreshViews();
+        } finally {editor.destroy();this.transcribing.delete(id);this.shared.setTranscription(id,null);}
     }
     unmount(view) { if (view && this.views.delete(view)) view.destroy(); }
     open(compose = false) {
@@ -147,6 +199,7 @@ export default class QingMoPlugin extends Plugin {
     }
     onunload() {
         this.disposed = true;
+        this.insights?.cancel();
         this.close();
         for (const view of Array.from(this.views || [])) this.unmount(view);
         if (this.floating) unmount(this.floating);

@@ -1161,3 +1161,12 @@ to {
 .qm-history-preview [data-type~=tag]::before,.qm-history-preview [data-type~=tag]::after{content:'#'}
 .qm-history-times>.qm-history-empty{background:var(--qm-fill);border-radius:7px;padding:12px;margin:0;text-align:center}
 .qm-history-retention{font-size:12px;line-height:1.7;color:var(--qm-text-secondary);margin:18px 8px 0}
+
+.qm-scope-description { color:var(--qm-text-secondary); text-align:center; padding:8px 16px; }
+.qm-pin-badge { color:var(--qm-brand); margin-right:8px; }
+.qm-entry-row { display:contents; }
+.qm-entry-mic { position:absolute; bottom:calc(24px + env(safe-area-inset-bottom, 0px)); right:32px; z-index:2; min-width:44px; min-height:44px; color:var(--qm-text-secondary); }
+.qm-root[data-layout="desktop"] .qm-entry-mic { display:none; }
+
+.qm-root[data-layout="desktop"].qm-review-active > .qm-sidebar { display:block!important; grid-column:1; grid-row:1; }
+.qm-root[data-layout="desktop"].qm-review-active > .qm-review { grid-column:2; grid-row:1; width:100%; max-width:620px; padding-left:0; padding-right:0; }

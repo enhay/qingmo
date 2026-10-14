@@ -10,11 +10,34 @@ function extractHistory(content, memo, doc) {
   const node=matches[0],expected=memo.type==='p'?'NodeParagraph':memo.type==='s'?'NodeSuperBlock':'';
   const structuralAttrs=new Set(['data-node-id','data-node-index','data-type','data-subtype','class','updated','data-sb-layout','data-marker']);
   const children=Array.from(node.querySelectorAll('[data-type^="Node"]'));
-  const safe=children.every(child=>Array.from(child.attributes).every(attr=>structuralAttrs.has(attr.name)))&&Boolean(expected)&&node.dataset.type===expected&&Array.from(node.querySelectorAll('[data-type^="Node"]')).every(child=>['NodeParagraph','NodeList','NodeListItem','NodeBlockquote','NodeCodeBlock'].includes(child.dataset.type));
+  const safe=children.every(child=>Array.from(child.attributes).every(attr=>structuralAttrs.has(attr.name)||(child.dataset.type==='NodeAudio'&&attr.name.startsWith('custom-'))))&&Boolean(expected)&&node.dataset.type===expected&&Array.from(node.querySelectorAll('[data-type^="Node"]')).every(child=>['NodeParagraph','NodeList','NodeListItem','NodeBlockquote','NodeCodeBlock','NodeAudio'].includes(child.dataset.type));
   return {dom:node.outerHTML,safe};
 }
-function contentKey(dom,doc){const template=doc.createElement('template');template.innerHTML=dom;template.content.querySelectorAll('.protyle-attr,.protyle-icons').forEach(node=>node.remove());for(const node of template.content.querySelectorAll('*'))for(const attribute of Array.from(node.attributes))if(['data-node-id','data-node-index','updated','contenteditable','spellcheck','draggable','id'].includes(attribute.name)||attribute.name.startsWith('custom-'))node.removeAttribute(attribute.name);for(const node of template.content.querySelectorAll('[data-type]'))if(!node.dataset.type.startsWith('Node'))node.dataset.type=node.dataset.type.split(' ').sort().join(' ');const walker=doc.createTreeWalker(template.content,4);while(walker.nextNode())walker.currentNode.nodeValue=walker.currentNode.nodeValue.replace(/[\u200b\u2060]/g,'');return template.innerHTML;}
-function historyMarkdown(dom,doc,lute){const template=doc.createElement('template');template.innerHTML=dom;template.content.querySelectorAll('.protyle-attr,.protyle-icons').forEach(node=>node.remove());for(const node of template.content.querySelectorAll('*'))for(const attr of Array.from(node.attributes))if(!['data-type','data-subtype','data-sb-layout','data-marker','data-content','href','src','alt','title','class','contenteditable','spellcheck'].includes(attr.name))node.removeAttribute(attr.name);const wrapper=template.content.querySelector('[data-type="NodeSuperBlock"]');if(wrapper)wrapper.replaceWith(...wrapper.childNodes);return lute.BlockDOM2StdMd(template.innerHTML).trim();}
+function contentKey(dom,doc){const template=doc.createElement('template');template.innerHTML=dom;template.content.querySelectorAll('.protyle-attr,.protyle-icons').forEach(node=>node.remove());for(const node of template.content.querySelectorAll('*'))for(const attribute of Array.from(node.attributes))if(['data-node-id','data-node-index','updated','contenteditable','spellcheck','draggable','id'].includes(attribute.name)||(attribute.name.startsWith('custom-')&&node.dataset.type!=='NodeAudio'))node.removeAttribute(attribute.name);for(const node of template.content.querySelectorAll('[data-type]'))if(!node.dataset.type.startsWith('Node'))node.dataset.type=node.dataset.type.split(' ').sort().join(' ');const walker=doc.createTreeWalker(template.content,4);while(walker.nextNode())walker.currentNode.nodeValue=walker.currentNode.nodeValue.replace(/[\u200b\u2060]/g,'');return template.innerHTML;}
+function historyMarkdown(dom,doc,lute){
+ const template=doc.createElement('template');template.innerHTML=dom;
+ template.content.querySelectorAll('.protyle-attr,.protyle-icons').forEach(node=>node.remove());
+ // Lute's standard Markdown export omits audio IALs. Carry their identity and
+ // custom attributes separately so restoring history keeps pending recordings.
+ const audio=[];
+ for(const node of template.content.querySelectorAll('[data-type="NodeAudio"]')){
+  const media=node.querySelector('audio'),src=media?.getAttribute('src');
+  if(!src||!/^\/?assets\/[^\s<>"']+$/.test(src))continue;
+  const escape=value=>String(value).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');
+  const attrs=[];const id=node.getAttribute('data-node-id');
+  if(/^\d{14}-[a-z0-9]{7}$/.test(id||''))attrs.push('id="'+id+'"');
+  for(const attr of Array.from(node.attributes))if(/^custom-[\w-]+$/.test(attr.name))attrs.push(attr.name+'="'+escape(attr.value)+'"');
+  const marker='QINGMOAUDIO'+crypto.randomUUID().replace(/-/g,'')+'END';
+  audio.push([marker,'<audio controls="controls" src="'+escape(src)+'"></audio>'+(attrs.length?'\n{: '+attrs.join(' ')+'}':'')]);
+  const replacement=doc.createElement('div');replacement.dataset.type='NodeParagraph';const body=doc.createElement('div');body.contentEditable='true';body.setAttribute('contenteditable','true');body.textContent=marker;replacement.append(body);node.replaceWith(replacement);
+ }
+ for(const node of template.content.querySelectorAll('*'))for(const attr of Array.from(node.attributes))if(!['data-type','data-subtype','data-id','data-sb-layout','data-marker','data-content','href','src','alt','title','class','contenteditable','spellcheck'].includes(attr.name))node.removeAttribute(attr.name);
+ const wrapper=template.content.querySelector('[data-type="NodeSuperBlock"]');if(wrapper)wrapper.replaceWith(...wrapper.childNodes);
+ for(const editable of template.content.querySelectorAll('[contenteditable]'))editable.setAttribute('contenteditable','true');
+ lute.SetBlockRef(true);lute.SetTag(true);lute.SetMark(true);lute.SetTextMark(true);let markdown=lute.BlockDOM2StdMd(template.innerHTML).trim();
+ for(const [marker,value] of audio)markdown=markdown.replace(marker,value);
+ return markdown;
+}
 class MemoHistory {
  constructor(repository,doc){this.repository=repository;this.doc=doc;}
  filters(memo){return {type:3,query:memo.root_id,notebook:'',op:''};}

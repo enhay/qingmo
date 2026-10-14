@@ -13,7 +13,7 @@
   }
   panel.querySelector('button,input,select')?.focus();
  });});
- function keyboard(e){if(actions&&['ArrowDown','ArrowUp','Home','End'].includes(e.key)){e.preventDefault();const buttons=[...panel.querySelectorAll('button:not(:disabled)')];let i=buttons.indexOf(panel.ownerDocument.activeElement);i=e.key==='Home'?0:e.key==='End'?buttons.length-1:(i+(e.key==='ArrowUp'?-1:1)+buttons.length)%buttons.length;buttons[i]?.focus();}}
+ function keyboard(e){if(e.key==='Escape'){e.preventDefault();e.stopPropagation();onclose();return;}if(e.key==='Tab'){const focusable=[...panel.querySelectorAll('button:not(:disabled),input:not(:disabled),select:not(:disabled),textarea:not(:disabled),a[href]')].filter(node=>node.getClientRects().length);const first=focusable[0],last=focusable.at(-1);if(e.shiftKey&&panel.ownerDocument.activeElement===first){e.preventDefault();last?.focus();}else if(!e.shiftKey&&panel.ownerDocument.activeElement===last){e.preventDefault();first?.focus();}}if(actions&&['ArrowDown','ArrowUp','Home','End'].includes(e.key)){e.preventDefault();const buttons=[...panel.querySelectorAll('button:not(:disabled)')];let i=buttons.indexOf(panel.ownerDocument.activeElement);i=e.key==='Home'?0:e.key==='End'?buttons.length-1:(i+(e.key==='ArrowUp'?-1:1)+buttons.length)%buttons.length;buttons[i]?.focus();}}
 </script>
 <!-- svelte-ignore a11y_no_static_element_interactions -->
 <div bind:this={backdrop} class:qm-action-backdrop={actions} class="qm-modal-backdrop" onclick={e=>{if(e.target===backdrop)onclose();}} onkeydown={keyboard}>

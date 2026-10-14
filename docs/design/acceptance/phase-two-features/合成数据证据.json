@@ -1,0 +1,24 @@
+{
+  "passed": true,
+  "source": "20261014183805-hznklk1",
+  "memo": "20261014183805-38vifhb",
+  "audio": "20261014183805-u4lstza",
+  "copiedAudio": "20261014183810-v8u7pol",
+  "insightDocuments": [
+    "20261014183816-1ggrzll",
+    "20261014183817-bh94f4r"
+  ],
+  "aiProvider": "DeepSeek real model generated and saved; context cleared",
+  "checks": [
+    "native reference relationship",
+    "audio identity and pending roundtrip",
+    "history restore and copy",
+    "source untouched",
+    "pin and filtered audio list",
+    "scope and stable order",
+    "AI input text only",
+    "real provider generation and final cleanup",
+    "source validation",
+    "insight save unique and not collected"
+  ]
+}

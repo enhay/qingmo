@@ -1,5 +1,5 @@
 
-const DEFAULT_SETTINGS = { notebook: '', pathTemplate: '/轻墨/{yyyy}/{MM}/{yyyy-MM-dd}', openOnStartup: false, floatingButton: true, reviewCount: 5 };
+const DEFAULT_SETTINGS = { notebook: '', pathTemplate: '/轻墨/{yyyy}/{MM}/{yyyy-MM-dd}', openOnStartup: false, floatingButton: true, reviewCount: 5, favoriteTags: [], reviewScope: { tag: '', start: '', end: '' }, tencentSecretId: '', tencentSecretKey: '' };
 const literal = value => "'" + String(value).replace(/'/g, "''") + "'";
 const localDay = date => `${date.getFullYear()}${String(date.getMonth() + 1).padStart(2, '0')}${String(date.getDate()).padStart(2, '0')}`;
 const validImage = value => typeof value === 'string' && /^assets\//.test(value) && !/[\r\n<>]/.test(value);
@@ -45,7 +45,11 @@ function editableMarkdown(markdown, rootId, wholeDocument = false) {
   if (wrapper) text = wrapper[1];
   // List item IALs can precede their text. Keep user attributes after removing
   // generated identity fields, and never modify literal code.
-  return transformProse(text, part => {
+  const lines = text.split('\n');
+  return transformProse(text, (part, lineIndex) => {
+    let previous = lineIndex - 1;
+    while (previous >= 0 && !lines[previous].trim()) previous--;
+    if (/^\s*<audio\b[^>]*>[\s\S]*<\/audio>\s*$/.test(lines[previous] || '') && /^\s*\{:[^\n]*\}\s*$/.test(part)) return part;
     const cleaned = part.replace(/\{:\s*([^\n]*?)\}/g, (all, attributes) => {
       const identity = attributes.match(/(?:^|\s)id="(\d{14}-[a-z0-9]{7})"/);
       if (!identity) return all;
@@ -179,12 +183,13 @@ class MemoRepository {
     return (data.notebooks || []).filter(item => !item.closed).map(({ id, name }) => ({ id, name }));
   }
   async get(id) {
-    const rows = await this.sql(`${TREE} SELECT m.id,m.created,m.type,m.root_id,r.content AS source,day.value AS qingmoDay,added.value AS added,marker.value AS marker,
+    const rows = await this.sql(`${TREE} SELECT m.id,m.created,m.type,m.root_id,r.content AS source,day.value AS qingmoDay,added.value AS added,marker.value AS marker,pinned.value AS pinned,
       (SELECT json_group_array(DISTINCT t.name) FROM descendants d JOIN all_tags t ON t.block_id=d.id WHERE d.memo_id=m.id) AS tagsJSON
       FROM memos m JOIN blocks r ON r.id=m.root_id
       LEFT JOIN attributes day ON day.block_id=r.id AND day.name='custom-qingmo-day'
       LEFT JOIN attributes added ON added.block_id=m.id AND added.name='custom-qingmo-added'
       LEFT JOIN attributes marker ON marker.block_id=m.id AND marker.name='custom-qingmo-memo'
+      LEFT JOIN attributes pinned ON pinned.block_id=m.id AND pinned.name='custom-qingmo-pinned'
       WHERE m.id=${literal(id)} LIMIT 1`);
     if (!rows.length) return null;
     return this.hydrate(rows[0]);
@@ -194,12 +199,14 @@ class MemoRepository {
     if (typeof native.dom !== 'string') throw new Error('MEMO_INVALID_DOM');
     const markdown = editableMarkdown(result.kramdown, row.id, row.type==='d');
     const parsed = parseMemoMarkdown(markdown);
-    return { ...row, markdown, dom: native.dom, content: parsed.text, tags: JSON.parse(row.tagsJSON||'[]'), images: allImagePaths(markdown), external: row.type!=='s' || row.added==='1' || row.marker!=='1' };
+    return { ...row, pinned: row.pinned==='1', pendingAudio: /<div\b(?=[^>]*\bdata-type="NodeAudio")(?=[^>]*\bcustom-qingmo-transcribe="pending")[^>]*>/.test(native.dom), markdown, dom: native.dom, content: parsed.text, tags: JSON.parse(row.tagsJSON||'[]'), images: allImagePaths(markdown), external: row.type!=='s' || row.added==='1' || row.marker!=='1' };
   }
-  async list({ keyword = '', tag = '', kind = 'all', day = '', source = 'all', order = 'newest', offset = 0 } = {}) {
+  async list({ id = '', keyword = '', tag = '', kind = 'all', day = '', source = 'all', order = 'newest', offset = 0 } = {}) {
     const where = [];
+    if (id) where.push(`m.id=${literal(id)}`);
     if (keyword) where.push(descendant(`instr(lower(c.content),lower(${literal(keyword)}))>0`));
     if (tag) where.push(descendant(`EXISTS (SELECT 1 FROM all_tags t WHERE t.block_id=c.id AND (t.name=${literal(tag)} OR instr(t.name,${literal(tag+'/')})=1))`));
+    if (kind === 'audio') where.push(descendant("c.type='audio'"));
     if (kind === 'image') where.push(descendant(`EXISTS (SELECT 1 FROM spans sp WHERE sp.block_id=c.id AND sp.type='img')`));
     if (kind === 'link') where.push(descendant(`EXISTS (SELECT 1 FROM spans sp WHERE sp.block_id=c.id AND (sp.type='a' OR instr(' '||sp.type||' ',' a ')>0))`));
     if (kind === 'untagged') where.push(`NOT ${descendant("EXISTS (SELECT 1 FROM all_tags t WHERE t.block_id=c.id)")}`);
@@ -209,15 +216,35 @@ class MemoRepository {
     if (source === 'native') where.push(`NOT ${external}`);
     const direction = order === 'oldest' ? 'ASC' : 'DESC';
     const start = Number.isSafeInteger(offset) && offset >= 0 ? offset : 0;
-    const rows = await this.sql(`${TREE} SELECT m.id,m.created,m.type,m.root_id,r.content AS source,day.value AS qingmoDay,added.value AS added,marker.value AS marker,
+    const rows = await this.sql(`${TREE} SELECT m.id,m.created,m.type,m.root_id,r.content AS source,day.value AS qingmoDay,added.value AS added,marker.value AS marker,pinned.value AS pinned,
       (SELECT json_group_array(DISTINCT t.name) FROM descendants d JOIN all_tags t ON t.block_id=d.id WHERE d.memo_id=m.id) AS tagsJSON
       FROM memos m JOIN blocks r ON r.id=m.root_id
       LEFT JOIN attributes day ON day.block_id=r.id AND day.name='custom-qingmo-day'
       LEFT JOIN attributes added ON added.block_id=m.id AND added.name='custom-qingmo-added'
       LEFT JOIN attributes marker ON marker.block_id=m.id AND marker.name='custom-qingmo-memo'
-      ${where.length ? 'WHERE ' + where.join(' AND ') : ''} ORDER BY m.created ${direction},m.id ${direction} LIMIT 21 OFFSET ${start}`);
+      LEFT JOIN attributes pinned ON pinned.block_id=m.id AND pinned.name='custom-qingmo-pinned'
+      ${where.length ? 'WHERE ' + where.join(' AND ') : ''} ORDER BY CASE WHEN pinned.value='1' THEN 0 ELSE 1 END,m.created ${direction},m.id ${direction} LIMIT 21 OFFSET ${start}`);
     const items = await Promise.all(rows.slice(0,20).map(row=>this.hydrate(row)));
     return { items, hasMore: rows.length > 20 };
+  }
+  async setPinned(id, pinned) {
+    if (!await this.get(id)) throw Object.assign(new Error('MEMO_NOT_FOUND'), {code:'MEMO_NOT_FOUND'});
+    await this.request('/api/attr/setBlockAttrs', {id, attrs:{'custom-qingmo-pinned':pinned?'1':''}});
+    const attrs = await this.request('/api/attr/getBlockAttrs', {id});
+    if ((attrs['custom-qingmo-pinned']==='1') !== Boolean(pinned)) throw Object.assign(new Error('PIN_SAVE_FAILED'), {code:'PIN_SAVE_FAILED'});
+    return {id, pinned:Boolean(pinned)};
+  }
+  async rangeIds(scope = {}) {
+    const {tag,start,end} = normalizeScope(scope), where=[];
+    if(tag) where.push(descendant(`EXISTS (SELECT 1 FROM all_tags t WHERE t.block_id=c.id AND (t.name=${literal(tag)} OR instr(t.name,${literal(tag+'/')})=1))`));
+    if(start) where.push(`substr(m.created,1,8)>=${literal(start)}`);
+    if(end) where.push(`substr(m.created,1,8)<=${literal(end)}`);
+    const ids=[];
+    for(let offset=0;;offset+=512){
+      const rows=await this.sql(`${TREE} SELECT m.id FROM memos m ${where.length?'WHERE '+where.join(' AND '):''} ORDER BY m.created DESC,m.id DESC LIMIT 512 OFFSET ${offset}`);
+      ids.push(...rows.map(row=>row.id));if(rows.length<512)break;
+    }
+    return ids;
   }
   async allIds() {
     const ids=[];
@@ -307,6 +334,10 @@ class MemoRepository {
       }
       if (rows[0].type!=='s') throw Object.assign(new Error('MEMO_NOT_EDITABLE'),{code:'MEMO_NOT_EDITABLE'});
     }
+    if (!id) text = text.replace(/(<audio\b[^>]*>[\s\S]*?<\/audio>[ \t]*\r?\n(?:[ \t]*\r?\n)*)\{:\s*([^\n]*?)\}/g, (_, audio, attributes) => {
+      const kept = attributes.replace(/(?:^|\s)(?:id|updated)="[^"]*"/g, '').trim();
+      return audio + (kept ? '{: ' + kept + '}' : '');
+    });
     const parsed = parseMemoMarkdown(text);
     const body = normalizeTags(parsed.text) + [...parsed.images, ...images].map(path => '\n\n![](' + path.replace(/ /g, '%20') + ')').join('');
     const ial = Object.entries(attrs).filter(([key]) => /^[\w-]+$/.test(key)).map(([key, value]) => `${key}="${String(value).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/\n/g, '&#10;')}"`).join(' ');
@@ -346,4 +377,28 @@ class MemoRepository {
     } catch (error) { error.paths = unique(uploaded); error.uploaded = error.paths; throw error; }
   }
 }
-export { transformProse, MemoRepository, DraftStore, parseMemoMarkdown, normalizeTags, DEFAULT_SETTINGS, dailyOrder };
+function normalizeScope(scope = {}) {
+  const date = value => {
+    if(!value)return '';
+    const day=String(value).replace(/-/g,'');
+    if(!/^\d{8}$/.test(day))throw Object.assign(new Error('INVALID_RANGE'),{code:'INVALID_RANGE'});
+    const d=new Date(+day.slice(0,4),+day.slice(4,6)-1,+day.slice(6,8));
+    if(localDay(d)!==day)throw Object.assign(new Error('INVALID_RANGE'),{code:'INVALID_RANGE'});
+    return day;
+  };
+  const result={tag:String(scope.tag||'').trim(),start:date(scope.start),end:date(scope.end)};
+  if(result.start&&result.end&&result.start>result.end)throw Object.assign(new Error('INVALID_RANGE'),{code:'INVALID_RANGE'});
+  return result;
+}
+function stableReviewIds(ids, scope, storage, date = new Date()) {
+  const normalized=normalizeScope(scope),day=localDay(date),identity=JSON.stringify(normalized);
+  // 保留默认全部范围原有日期抽样；每个受限范围有独立的本机序列。
+  const key='qingmo:review:'+day+(Object.values(normalized).some(Boolean)?':'+identity:'');
+  let saved=[];
+  try{const value=JSON.parse(storage?.getItem(key));if(Array.isArray(value))saved=unique(value.filter(id=>typeof id==='string'));}catch{}
+  const current=new Set(ids),seen=new Set(saved),kept=saved.filter(id=>current.has(id));
+  const order=kept.concat(dailyOrder(ids.filter(id=>!seen.has(id)),day+identity));
+  try{storage?.setItem(key,JSON.stringify(order));}catch{}
+  return order;
+}
+export { normalizeScope, stableReviewIds, transformProse, MemoRepository, DraftStore, parseMemoMarkdown, normalizeTags, DEFAULT_SETTINGS, dailyOrder };
