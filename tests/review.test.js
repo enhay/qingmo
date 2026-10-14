@@ -1,8 +1,7 @@
-'use strict';
 
-const test = require('node:test');
-const assert = require('node:assert/strict');
-const { dailyOrder } = require('../src/data');
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { dailyOrder } from '../src/core/data.js';
 
 test('同日回顾顺序不受查询返回顺序影响，每条速记只出现一次', () => {
   const ids = ['20261011090000-aaaaaaa', '20261010080000-bbbbbbb', '20261009120000-ccccccc', '20261008110000-ddddddd'];

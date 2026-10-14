@@ -1,5 +1,4 @@
-'use strict';
-const {normalizeTags,transformProse}=require('./data');
+import {normalizeTags,transformProse} from '../core/data.js';
 const escapeHTML=text=>String(text).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 const escapeMarkdown=text=>text.replace(/\\/g,'\\\\').replace(/([`*_\[\]<>])/g,'\\$1').replace(/(^|\n)(\s*)([-+>#])(?=\s)/g,'$1$2\\$3').replace(/(^|\n)(\s*)(\d+)([.)])(?=\s)/g,'$1$2$3\\$4');
 function createEditor({element,renderMarkdown,onChange,onSelection}){
@@ -23,4 +22,4 @@ function createEditor({element,renderMarkdown,onChange,onSelection}){
  element.addEventListener('paste',event=>{event.preventDefault();const data=event.clipboardData;insertHTML(data.getData('text/html')?sanitize(data.getData('text/html')):escapeHTML(data.getData('text/plain')).replace(/\n/g,'<br>'));decorate();});
  return {load,value,command,highlightToken(){const current=token();if(win.CSS?.highlights&&win.Highlight){if(current)win.CSS.highlights.set('qm-tag-input',new win.Highlight(current.range));else win.CSS.highlights.delete('qm-tag-input');}},active,token,completeTag,insert(text){restore();doc.execCommand('insertText',false,text);changed();},get composing(){return composing;},canEdit(markdown){let unsafe=false;transformProse(markdown,part=>{if(/\{:\s|\{\{\{|\$[^$\n]+\$|\(\(\d{14}-|!\[.*\]\(.*\s+"|\]\([^\n]*\s+"/.test(part))unsafe=true;return part;});if(unsafe)return false;const template=doc.createElement('template');template.innerHTML=renderMarkdown?renderMarkdown(markdown):escapeHTML(markdown);const supported=new Set('P DIV BR STRONG B EM I U MARK S DEL UL OL LI BLOCKQUOTE PRE CODE A IMG SPAN'.split(' '));return Array.from(template.content.querySelectorAll('*')).every(node=>supported.has(node.tagName)&&(!node.dataset.type||node.dataset.type.split(' ').every(type=>['tag','strong','em','u','mark','s'].includes(type))));},destroy(){win.CSS?.highlights?.delete('qm-tag-input');doc.removeEventListener('selectionchange',remember);}};
 }
-module.exports={createEditor};
+export {createEditor};

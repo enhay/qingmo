@@ -133,5 +133,7 @@
   "historyNativeRequired": "此内容包含复杂结构，请在思源中查看和处理历史版本。",
   "historyAssetMissing": "历史图片资源无法加载",
   "historyReplacesDraftConfirm": "这条笔记有未发送的草稿。恢复历史版本会替换该草稿，是否继续？",
-  "historyRetention": "历史版本由思源保存，保留期限随思源设置。"
+  "historyRetention": "历史版本由思源保存，保留期限随思源设置。",
+  "settingsRecord": "记录",
+  "settingsTranscription": "转写"
 }

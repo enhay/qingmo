@@ -6,13 +6,14 @@
 
 ## 本地构建
 
-需要 Node.js 22 或更新版本，无 npm 依赖，不需要安装依赖。
+需要 Node.js 22.12 或更新的 22.x，或 Node.js 24 及以上。使用锁定版本的 Svelte 5、Vite 和官方 Svelte 插件构建。
 
 ```sh
+npm ci
 npm run build
 ```
 
-构建生成 `dist/`，其中 `index.js` 已包含插件自己的模块，`siyuan` 由宿主提供。将 `dist/` 内文件打包即可得到插件包。
+构建生成 `dist/`，其中 CommonJS `index.js` 包含插件组件和自己的模块，`siyuan` 由宿主提供；样式、翻译和 AI 方法资源一并打包。将 `dist/` 内文件打包即可得到插件包。
 
 ## 本地预览
 

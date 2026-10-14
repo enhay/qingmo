@@ -1,51 +1,21 @@
-'use strict';
-const { Plugin, Dialog, Constants, openTab, openMobileFileById, getFrontend } = require('siyuan');
+import { Plugin, Dialog, Constants, openTab, openMobileFileById, getFrontend } from 'siyuan';
+import './styles/global.css';
+import { createSharedState } from './state/shared.svelte.js';
+import { mount, unmount } from 'svelte';
+import FloatingCapture from './components/FloatingCapture.svelte';
 
 const TAB_TYPE = 'qingmo-tab';
-const { MemoRepository, DEFAULT_SETTINGS } = require('./data');
-const { MemoHistory } = require('./history');
-const { createView } = require('./ui');
+import { MemoRepository, DEFAULT_SETTINGS } from './core/data.js';
+import { MemoHistory } from './core/history.js';
+import { createView } from './views/mount.js';
 
-function safeHTML(html) {
-    const template = document.createElement('template');
-    template.innerHTML = html;
-    const allowed = new Set('P BR STRONG B EM I U MARK DEL S UL OL LI BLOCKQUOTE PRE CODE A IMG SPAN DIV H1 H2 H3 H4 H5 H6 HR TABLE THEAD TBODY TR TH TD'.split(' '));
-    for (const element of Array.from(template.content.querySelectorAll('*'))) {
-        if (!allowed.has(element.tagName)) { element.remove(); continue; }
-        for (const attribute of Array.from(element.attributes)) {
-            const name = attribute.name.toLowerCase();
-            if (!['href', 'src', 'alt', 'title', 'start', 'class', 'data-type', 'data-content'].includes(name)) element.removeAttribute(attribute.name);
-        }
-        for (const name of ['href', 'src']) {
-            const value = element.getAttribute(name);
-            if (value == null) continue;
-            const compact = value.replace(/[\u0000-\u0020\u007f]/g, '');
-            const safe = name === 'src' ? /^(?:https?:\/\/|\/?assets\/)/i.test(compact) : /^(?:https?:\/\/|mailto:|siyuan:\/\/blocks\/|#|\/?assets\/)/i.test(compact);
-            if (!safe) element.removeAttribute(name);
-        }
-        if (element.tagName === 'A') element.setAttribute('rel', 'noopener noreferrer');
-    }
-    return template.innerHTML;
-}
+import { safeHTML, renderBlockDOM } from './core/render.js';
 
-function renderBlockDOM(dom) {
-    const template = document.createElement('template');
-    template.innerHTML = dom;
-    template.content.querySelectorAll('.protyle-attr,.protyle-icons').forEach(node => node.remove());
-    for (const node of Array.from(template.content.querySelectorAll('[data-type^="Node"]'))) {
-        if (node.dataset.type === 'NodeSuperBlock' || node.dataset.type === 'NodeDocument') { node.replaceWith(...node.childNodes); continue; }
-        for (const attribute of Array.from(node.attributes)) if (!['data-type', 'data-subtype', 'data-marker', 'class'].includes(attribute.name)) node.removeAttribute(attribute.name);
-    }
-    const lute = window.Lute.New();
-    lute.SetTag(true); lute.SetMark(true);
-    return safeHTML(lute.BlockDOM2HTML(template.innerHTML));
-}
-
-module.exports = class QingMoPlugin extends Plugin {
+export default class QingMoPlugin extends Plugin {
     async onload() {
         this.views = new Set();
         this.disposed = false;
-        this.settings = { ...DEFAULT_SETTINGS };
+
         this.t = (key, values = {}) => String(this.i18n[key] || key).replace(/\{(\w+)\}/g, (_, name) => values[name] == null ? `{${name}}` : String(values[name]));
         this.repository = new MemoRepository(async (path, body = {}) => {
             const multipart = typeof FormData !== 'undefined' && body instanceof FormData;
@@ -57,7 +27,11 @@ module.exports = class QingMoPlugin extends Plugin {
         });
         this.repository.history = new MemoHistory(this.repository, document);
         const saved = await this.loadData('settings.json');
-        if (saved && typeof saved === 'object' && !Array.isArray(saved)) Object.assign(this.settings, saved);
+        this.shared = createSharedState({
+            initial: saved,
+            persist: settings => this.saveData('settings.json', settings),
+            onSaved: () => { this.updateFloating(); this.refreshViews?.(); }
+        });
         if (this.disposed) return;
         this.mobile = ['mobile', 'browser-mobile'].includes(getFrontend());
         // 顶栏与侧栏图标：轻墨 logo 的单色线性简化（便签卡片、半透明墨浪、一滴墨），线宽与思源自带图标一致。
@@ -122,10 +96,11 @@ module.exports = class QingMoPlugin extends Plugin {
         this.themeObserver = new MutationObserver(() => { for (const view of this.views) view.setTheme(this.theme()); });
         this.themeObserver.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme-mode', 'data-light-theme', 'data-dark-theme'] });
     }
+    get settings() { return this.shared?.settings || DEFAULT_SETTINGS; }
     theme() { return window.siyuan.config.appearance.mode === 1 ? 'dark' : 'light'; }
     mount(container, mode) {
         if (this.disposed) return null;
-        const view = createView({ container, repository: this.repository, settings: this.settings, beforeCompose: () => { for (const other of this.views) if (other !== view && !other.releaseComposer()) return false; return true; }, saveSettings: async settings => { await this.saveData('settings.json', settings); Object.assign(this.settings, settings); this.updateFloating(); }, t: this.t, onClose: () => this.close(), mode, openBlock: id => { this.close(); const action = [Constants.CB_GET_CONTEXT, Constants.CB_GET_HL]; if (this.mobile) openMobileFileById(this.app, id, action); else openTab({ app: this.app, doc: { id, action, zoomIn: false } }); }, renderBlockDOM, renderMarkdown: markdown => { const lute = window.Lute.New(); lute.SetTag(true); lute.SetMark(true); lute.SetSanitize(true); return safeHTML(lute.MarkdownStr('qingmo', markdown)); } });
+        const view = createView({ container, repository: this.repository, shared: this.shared, beforeCompose: () => { for (const other of this.views) if (other !== view && !other.releaseComposer()) return false; return true; }, t: this.t, onClose: () => this.close(), mode, openBlock: id => { this.close(); const action = [Constants.CB_GET_CONTEXT, Constants.CB_GET_HL]; if (this.mobile) openMobileFileById(this.app, id, action); else openTab({ app: this.app, doc: { id, action, zoomIn: false } }); }, renderBlockDOM, renderMarkdown: markdown => { const lute = window.Lute.New(); lute.SetTag(true); lute.SetMark(true); lute.SetSanitize(true); return safeHTML(lute.MarkdownStr('qingmo', markdown)); } });
         this.views.add(view);
         view.setTheme(this.theme());
         return view;
@@ -162,24 +137,20 @@ module.exports = class QingMoPlugin extends Plugin {
         if (this.settings.openOnStartup) this.open(true);
     }
     updateFloating() {
-        this.floating?.remove();
+        if (this.floating) unmount(this.floating);
         this.floating = null;
         if (!this.mobile || !this.settings.floatingButton || this.disposed || this.dialog) return;
-        const button = document.createElement('button');
-        button.type = 'button';
-        button.className = 'qingmo-floating';
-        button.setAttribute('aria-label', this.t('floatingCapture'));
-        button.textContent = '+';
-        button.style.cssText = 'position:fixed;right:20px;bottom:calc(72px + env(safe-area-inset-bottom));width:52px;height:52px;border-radius:50%;border:1px solid var(--b3-border-color);background:var(--b3-theme-primary);color:var(--b3-theme-on-primary);font-size:30px;z-index:100;';
-        button.addEventListener('click', () => this.open(true));
-        document.body.appendChild(button);
-        this.floating = button;
+        this.floating = mount(FloatingCapture, {
+            target: document.body,
+            props: { label: this.t('floatingCapture'), onclick: () => this.open(true) }
+        });
     }
     onunload() {
         this.disposed = true;
         this.close();
         for (const view of Array.from(this.views || [])) this.unmount(view);
-        this.floating?.remove();
+        if (this.floating) unmount(this.floating);
+        this.floating = null;
         this.themeObserver?.disconnect();
         if (this.refreshViews) {
             this.eventBus.off('click-blockicon', this.blockMenuHandler);

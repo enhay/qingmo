@@ -1,0 +1,89 @@
+<script>
+ import {setContext,onMount,tick,untrack} from 'svelte';
+ import {CONTEXT,displayDay} from './context.js';
+ import {parseMemoMarkdown} from '../core/data.js';
+ import Sidebar from './Sidebar.svelte';
+ import Composer from './Composer.svelte';
+ import Review from './Review.svelte';
+ import Settings from './Settings.svelte';
+ import History from './History.svelte';
+ import Button from '../components/Button.svelte';
+ import Icon from '../components/Icon.svelte';
+ import Dialog from '../components/Dialog.svelte';
+ import MemoCard from '../components/MemoCard.svelte';
+ let {options:suppliedOptions}=$props();
+ const options=untrack(()=>suppliedOptions);
+ const {repository,t,container,renderMarkdown,renderBlockDOM,openBlock,onClose,mode='fullscreen',shared}=options;
+ setContext(CONTEXT,{options,shared});
+ const doc=container.ownerDocument,win=doc.defaultView;
+ let root=$state(),stream=$state(),sidebar=$state(),main=$state(),menuButton=$state(),titleButton=$state(),search=$state(),composeSlot=$state(),overlay=$state(),composer=$state(),review=$state();
+ let layout=$state('mobile'),theme=$state('light'),sideOpen=$state(false),searchOpen=$state(false),composeOpen=$state(false),reviewMode=$state(''),modal=$state(null);
+ let items=$state([]),stats=$state({tags:[]}),filter=$state({keyword:'',tag:'',kind:'all',day:'',source:'all'}),listOrder=$state('newest'),loading=$state(false),hasMore=$state(false),status=$state(''),notice=$state(''),searchValue=$state(''),historyState=$state('loading'),historySelected=$state(false),deleting=$state(false);
+ let serial=0,dead=false,searchTimer,restoreFocus,dialogRestoreFocus,pointerUsed=false,touchY=0,touchX=0;
+ let inline=$derived(layout==='desktop');
+ let title=$derived(filter.tag?'#'+filter.tag:displayDay(filter.day)||t(filter.kind==='all'?(inline?'all':'appName'):filter.kind));
+ let selectedFilters=$derived([['keyword',filter.keyword],['tag',filter.tag?'#'+filter.tag:''],['kind',filter.kind==='all'?'':t(filter.kind)],['day',displayDay(filter.day)],['source',filter.source==='all'?'':t(filter.source==='native'?'sourceNative':'sourceExternal')]].filter(([,label])=>label));
+ function notify(key){status=t(key);notice=/Failed|Unavailable/.test(key)?t(key):'';}
+ async function load(reset){if(dead||(!reset&&loading))return;const token=reset?++serial:serial;loading=true;notify('loading');try{const result=await repository.list({...filter,order:listOrder,offset:reset?0:items.length});if(dead||token!==serial)return;items=reset?result.items:items.concat(result.items);hasMore=result.hasMore;status='';}catch{if(token===serial&&!dead)notify('loadFailed');}finally{if(token===serial)loading=false;}}
+ export async function refresh(){review?.refresh();const listPromise=load(true),token=serial;try{const next=await repository.stats();if(!dead&&token===serial)stats=next;}catch{if(!dead&&token===serial)notify('statsFailed');}await listPromise;}
+ function choose(next){clearTimeout(searchTimer);filter={...filter,...next};if(typeof next.keyword==='string')searchValue=next.keyword;sideOpen=false;if(stream)stream.scrollTop=0;refresh();}
+ async function clearFilters(next){choose(next);await tick();(root.querySelector('.qm-filters button')||(inline||searchOpen?search:menuButton))?.focus();}
+ function queueSearch(e){clearTimeout(searchTimer);if(e.isComposing)return;searchTimer=setTimeout(()=>choose({keyword:searchValue}),200);}
+ async function toggleSidebar(value){sideOpen=value;if(pointerUsed)return;await tick();if(value)sidebar.querySelector('button')?.focus();else menuButton?.focus();}
+ function setModal(next){if(!modal)dialogRestoreFocus=next.anchor||doc.activeElement;modal=next;}
+ function closeDialog(){const previous=dialogRestoreFocus;modal=null;dialogRestoreFocus=null;tick().then(()=>previous?.focus());}
+ function showSettings(first=false){setModal({type:'settings',label:'settings',first});}
+ function listMenu(section='main'){setModal({type:'list',label:'noteOptions',section,anchor:titleButton,actions:true});}
+ function memoMenu(memo,anchor,event,text){setModal({type:text?'selection':'memo',label:text?'copySelection':'memoActions',memo,anchor,text,actions:true,point:event?{x:event.clientX||anchor.getBoundingClientRect().left+16,y:event.clientY||anchor.getBoundingClientRect().top+16}:undefined});}
+ async function copyText(text){try{await win.navigator.clipboard.writeText(text);closeDialog();notify('copied');}catch{notify('copyFailed');}}
+ function showHistory(memo){historyState='loading';historySelected=false;setModal({type:'history',label:'history',memo});}
+ function confirmDelete(memo){setModal({type:'delete',label:memo.external?'removeConfirm':'deleteConfirm',memo});}
+ async function deleteMemo(memo){deleting=true;try{await(memo.external?repository.remove(memo.id):repository.delete(memo.id));closeDialog();await refresh();}catch{notify('deleteFailed');}finally{deleting=false;}}
+ function image(url){setModal({type:'image',label:'viewImage',url});}
+ function format(anchor){setModal({type:'format',label:'formatMore',anchor,actions:true});}
+ function openReview(next){composer?.flushDraft();reviewMode=next;sideOpen=false;}
+ function closeReview(){reviewMode='';refresh();}
+ export async function compose(memo){if(reviewMode)closeReview();await composer?.compose(memo);}
+ export function releaseComposer(){return composer?.releaseComposer()??true;}
+ export function keyboardChanged(){if(dead||!root)return;const viewport=win.visualViewport,bottom=viewport?Math.max(0,win.innerHeight-viewport.height-viewport.offsetTop):0;root.style.setProperty('--qm-keyboard',bottom+'px');root.style.setProperty('--qm-composer-safe-bottom',bottom>0?'0px':'env(safe-area-inset-bottom,0px)');if(composeOpen)composer?.resizeInput();}
+ export function handleBack(){if(modal){closeDialog();return true;}if(reviewMode){if(reviewMode!=='views')openReview('views');else closeReview();return true;}if(inline){if(composer?.isEditing()){composer.closeCompose();return true;}return false;}if(composeOpen){composer.closeCompose();return true;}if(searchOpen){searchOpen=false;menuButton?.focus();return true;}if(sideOpen){toggleSidebar(false);return true;}return false;}
+ export function setTheme(value){theme=value===1||value==='dark'?'dark':'light';}
+ export function beforeDestroy(){composer?.flushDraft();dead=true;serial++;clearTimeout(searchTimer);}
+ function keyboard(e){if(!root.contains(doc.activeElement)||e.isComposing)return;if(e.key==='Escape'){e.preventDefault();if(!handleBack()){composer?.flushDraft();onClose?.();}return;}if(e.key==='Tab'&&(modal||(!inline&&composeOpen&&!reviewMode))){const target=modal?root.querySelector('.qm-dialog'):root.querySelector('.qm-sheet');const focusable=[...target.querySelectorAll('button:not(:disabled),input:not(:disabled),[contenteditable="true"],select:not(:disabled),a[href]')].filter(x=>!x.hidden&&x.getClientRects().length);const first=focusable[0],last=focusable[focusable.length-1];if(e.shiftKey&&doc.activeElement===first){e.preventDefault();last?.focus();}else if(!e.shiftKey&&doc.activeElement===last){e.preventDefault();first?.focus();}}}
+ async function applyLayout(){const next=root.clientWidth>=640?'desktop':'mobile';if(next===layout)return;composer?.flushDraft();layout=next;sideOpen=false;composeOpen=false;if(next==='mobile')searchOpen=!!searchValue;await tick();composer?.place(next==='desktop'?composeSlot:overlay);keyboardChanged();}
+ onMount(()=>{const pointer=()=>pointerUsed=true,key=e=>{if(/^(Tab|Enter| |Escape|Arrow)/.test(e.key))pointerUsed=false;};doc.addEventListener('pointerdown',pointer,true);doc.addEventListener('keydown',key,true);doc.addEventListener('keydown',keyboard);const resize=typeof win.ResizeObserver==='function'?new win.ResizeObserver(applyLayout):null;resize?.observe(root);win.visualViewport?.addEventListener('resize',keyboardChanged);win.visualViewport?.addEventListener('scroll',keyboardChanged);applyLayout();refresh();return()=>{beforeDestroy();resize?.disconnect();doc.removeEventListener('pointerdown',pointer,true);doc.removeEventListener('keydown',key,true);doc.removeEventListener('keydown',keyboard);win.visualViewport?.removeEventListener('resize',keyboardChanged);win.visualViewport?.removeEventListener('scroll',keyboardChanged);};});
+</script>
+{#snippet searchBox()}
+ <div class="qm-search" hidden={!inline&&!searchOpen}><Icon name="search"/><input bind:this={search} type="search" bind:value={searchValue} placeholder={t('searchPlaceholder')} aria-label={t('search')} oninput={queueSearch} oncompositionend={queueSearch}/></div>
+{/snippet}
+<div bind:this={root} role="region" aria-label={t('appName')} class={'qm-root qm-'+mode} class:qm-sidebar-open={sideOpen} class:qm-review-active={!!reviewMode} data-layout={layout} data-qm-theme={theme} ontouchstart={e=>{touchY=e.touches[0].clientY;touchX=e.touches[0].clientX;}} ontouchend={e=>{const dy=e.changedTouches[0].clientY-touchY,dx=e.changedTouches[0].clientX-touchX;if(sideOpen&&dx<-60)toggleSidebar(false);else if(composeOpen&&dy>80&&e.target.closest('.qm-handle'))composer.closeCompose();else if(!composeOpen&&!reviewMode&&stream.scrollTop===0&&dy>80)refresh();}}>
+ {#if reviewMode}{#key reviewMode}<Review inert={!!modal} bind:this={review} mode={reviewMode} onback={()=>reviewMode==='views'?closeReview():openReview('views')} onmode={openReview} onsettings={()=>setModal({type:'reviewSettings',label:'reviewSettings'})} {choose} onmenu={memoMenu} onimage={image}/>{/key}{/if}
+ <aside bind:this={sidebar} class="qm-sidebar" aria-label={t('sidebar')} aria-hidden={!inline&&!sideOpen} inert={!!modal||(!inline&&(composeOpen||!sideOpen))}><Sidebar {stats} {filter} {choose} {openReview} {showSettings} flushDraft={()=>composer?.flushDraft()}/></aside>
+ <!-- svelte-ignore a11y_no_static_element_interactions, a11y_click_events_have_key_events -->
+ <section bind:this={main} class="qm-main" inert={!!modal||(!inline&&composeOpen)} onclickcapture={e=>{if(sideOpen){e.preventDefault();e.stopPropagation();toggleSidebar(false);}}}>
+  <header class="qm-header"><Button bind:element={menuButton} label={t('sidebar')} icon="menu" class="qm-round" aria-expanded={sideOpen} onclick={()=>toggleSidebar(!sideOpen)}/><Button bind:element={titleButton} label={title} class="qm-title" aria-haspopup="dialog" aria-expanded={modal?.type==='list'} onclick={()=>listMenu()}/><Button label={t('search')} icon="search" class="qm-round" onclick={async()=>{searchOpen=!searchOpen;await tick();if(searchOpen)search?.focus();}}/>{#if inline}{@render searchBox()}{/if}</header>
+  {#if !inline}{@render searchBox()}{/if}
+  <nav class="qm-capsules" aria-label={t('views')}>{#each [['views','grid','views'],['dailyReview','hash','daily'],['randomWalk','more','random']] as [key,icon,next]}<Button label={t(key)} {icon} class="qm-capsule" onclick={()=>openReview(next)}><span>{t(key)}</span></Button>{/each}</nav>
+  <div bind:this={composeSlot} class="qm-compose-slot"></div>
+  <div class="qm-filters" hidden={!selectedFilters.length} role="group" aria-label={t('activeFilters')}>{#each selectedFilters as [key,label]}<Button label={t('removeFilter',{filter:label})} class="qm-filter" onclick={()=>clearFilters({[key]:key==='kind'||key==='source'?'all':''})}><span>{label}</span><Icon name="close"/></Button>{/each}{#if selectedFilters.length>1}<Button label={t('clearFilters')} class="qm-clear-filters" onclick={()=>clearFilters({keyword:'',tag:'',kind:'all',day:'',source:'all'})}/>{/if}</div>
+  <div bind:this={stream} class="qm-stream" role="region" aria-label={t('memoList')} aria-busy={loading} onscroll={()=>{if(hasMore&&stream.scrollHeight-stream.scrollTop-stream.clientHeight<160)load(false);}}>{#each items as memo (memo.id)}<MemoCard {memo} {t} {renderMarkdown} {renderBlockDOM} {openBlock} {choose} onmenu={memoMenu} onimage={image}/>{/each}{#if !items.length&&!loading}<div class="qm-empty">{t(selectedFilters.length?'noResults':'empty')}</div>{/if}</div>
+  <div class="qm-status" role="status">{status}</div><Button label={t('inputBar')} icon="plus" class="qm-entry" onclick={()=>compose()}><span>{t('inputBar')}</span></Button>
+ </section>
+ <!-- svelte-ignore a11y_no_static_element_interactions, a11y_click_events_have_key_events -->
+ <div bind:this={overlay} class="qm-compose-overlay" hidden={inline||!composeOpen} inert={!!modal} onclick={e=>{if(e.target===overlay)composer.closeCompose();}}><Composer bind:this={composer} {layout} {stats} onclose={()=>{composeOpen=false;restoreFocus?.focus();}} onopen={()=>{if(!inline){restoreFocus=doc.activeElement;composeOpen=true;keyboardChanged();}}} onnotify={notify} onsaved={()=>{filter={keyword:'',tag:'',kind:'all',day:'',source:'all'};searchValue='';stream.scrollTop=0;return refresh();}} onsettings={showSettings} onformat={format}/></div>
+ <div class="qm-notice" role="alert" hidden={!notice}>{notice}</div>
+ {#if modal}{#key modal.type+':'+(modal.section||'')}
+ <Dialog label={t(modal.label)} closeLabel={t('closeDialog')} onclose={closeDialog} actions={modal.actions} anchor={modal.anchor} point={modal.point} {root} class={modal.type==='history'?'qm-history':modal.type==='list'?'qm-list-menu':modal.type==='image'?'qm-image-viewer':''} state={modal.type==='history'?historyState:undefined} selected={historySelected}>
+  {#if modal.type==='settings'||modal.type==='reviewSettings'}<Settings first={modal.first} review={modal.type==='reviewSettings'} onclose={closeDialog} onnotify={notify} onsaved={first=>{if(first)compose();review?.refresh();}}/>
+  {:else if modal.type==='history'}<History memo={modal.memo} {composer} onclose={closeDialog} onnotify={notify} onrefresh={refresh} onsettings={showSettings} onstate={state=>historyState=state} onselected={value=>historySelected=value}/>
+  {:else if modal.type==='image'}<img src={modal.url} alt={t('attachedImage')}/>
+  {:else if modal.type==='selection'}<Button label={t('copySelection')} class="qm-dialog-action" onclick={()=>copyText(modal.text)}/>
+  {:else if modal.type==='format'}{#each ['underline','highlight','ordered','quote'] as key}<Button label={t(key)} icon={key} class="qm-dialog-action" onclick={()=>{closeDialog();composer.command(key);}}><span>{t(key)}</span></Button>{/each}
+  {:else if modal.type==='memo'}{@const memo=modal.memo}{#if memo.type==='p'||memo.type==='s'}<Button label={t('edit')} class="qm-dialog-action" onclick={()=>{const selected=memo;closeDialog();compose(selected);}}/>{/if}<Button label={t('history')} class="qm-dialog-action" onclick={()=>showHistory(memo)}/><Button label={t('copy')} class="qm-dialog-action" onclick={()=>copyText(parseMemoMarkdown(memo.markdown).text)}/><Button label={t('openNative')} class="qm-dialog-action" onclick={()=>{const id=memo.id;closeDialog();openBlock(id);}}/><div class="qm-action-separator"></div><Button label={t(memo.external?'removeMemo':'delete')} class="qm-dialog-action qm-danger" onclick={()=>confirmDelete(memo)}/>
+  {:else if modal.type==='delete'}{@const memo=modal.memo}<p>{t(memo.type==='d'?'removeDocumentExplanation':memo.external?(memo.marker==='1'&&memo.tags.includes('轻墨')?'removeBothExplanation':memo.tags.includes('轻墨')?'removeTagExplanation':'removeAttrExplanation'):'deleteExplanation')}</p><Button label={t(memo.external?'removeMemo':'delete')} class="qm-primary qm-danger" disabled={deleting} onclick={()=>deleteMemo(memo)}/><Button label={t('cancel')} onclick={closeDialog}/>
+  {:else if modal.type==='list'}
+   {#if modal.section==='main'}{#each [['sortOrder','sort',t(listOrder==='newest'?'sortNewest':'sortOldest'),'sort'],['noteSource','filter',t(filter.source==='all'?'sourceAll':filter.source==='native'?'sourceNative':'sourceExternal'),'source']] as [key,icon,value,next]}<Button label={t(key)} {icon} class="qm-dialog-action" aria-description={value} onclick={()=>listMenu(next)}><span>{t(key)}<small class="qm-action-detail">{value}</small></span><Icon name="chevron"/></Button>{/each}
+   {:else}<Button label={t('back')} icon="chevron" class="qm-dialog-action" onclick={()=>listMenu()}><span>{t('back')}</span></Button><div class="qm-action-separator"></div>{#each modal.section==='sort'?[['newest','sortNewest'],['oldest','sortOldest']]:[['all','sourceAll'],['native','sourceNative'],['external','sourceExternal']] as [value,key]}<Button label={t(key)} icon="check" class="qm-dialog-action" aria-pressed={(modal.section==='sort'?listOrder:filter.source)===value} onclick={()=>{const sort=modal.section==='sort';closeDialog();if(sort){listOrder=value;choose({});}else choose({source:value});}}><span>{t(key)}</span></Button>{/each}{/if}
+  {/if}
+ </Dialog>{/key}{/if}
+</div>

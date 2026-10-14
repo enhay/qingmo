@@ -1,7 +1,6 @@
-'use strict';
-const test = require('node:test');
-const assert = require('node:assert/strict');
-const { normalizeTags, parseMemoMarkdown, DraftStore, MemoRepository } = require('../src/data');
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { normalizeTags, parseMemoMarkdown, DraftStore, MemoRepository } from '../src/core/data.js';
 
 function blockProvider(kramdown, dom) {
   return async path => {

@@ -1,7 +1,7 @@
-'use strict';
 // 把 dist/ 软链接到思源工作空间的插件目录，构建后重载思源即可预览。
-const fs = require('node:fs');
-const path = require('node:path');
+import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 const workspace = process.argv[2];
 if (!workspace) {
   console.error('用法：npm run link -- <思源工作空间目录>');
@@ -12,7 +12,7 @@ if (!fs.existsSync(plugins)) {
   console.error(`不是思源工作空间：${plugins} 不存在`);
   process.exit(1);
 }
-const target = path.resolve(__dirname, '../dist');
+const target = fileURLToPath(new URL('../dist', import.meta.url));
 const link = path.join(plugins, 'siyuan-qingmo');
 const stat = fs.lstatSync(link, { throwIfNoEntry: false });
 if (stat && !stat.isSymbolicLink()) {

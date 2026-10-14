@@ -1,4 +1,3 @@
-'use strict';
 
 const failure = code => Object.assign(new Error(code), {code});
 function extractHistory(content, memo, doc) {
@@ -51,4 +50,4 @@ class MemoHistory {
   }catch(error){throw failure('HISTORY_SNAPSHOT_FAILED');}
  }
 }
-module.exports={MemoHistory,extractHistory,contentKey,historyMarkdown};
+export {MemoHistory,extractHistory,contentKey,historyMarkdown};

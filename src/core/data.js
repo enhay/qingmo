@@ -1,4 +1,3 @@
-'use strict';
 
 const DEFAULT_SETTINGS = { notebook: '', pathTemplate: '/轻墨/{yyyy}/{MM}/{yyyy-MM-dd}', openOnStartup: false, floatingButton: true, reviewCount: 5 };
 const literal = value => "'" + String(value).replace(/'/g, "''") + "'";
@@ -347,4 +346,4 @@ class MemoRepository {
     } catch (error) { error.paths = unique(uploaded); error.uploaded = error.paths; throw error; }
   }
 }
-module.exports = { transformProse, MemoRepository, DraftStore, parseMemoMarkdown, normalizeTags, DEFAULT_SETTINGS, dailyOrder };
+export { transformProse, MemoRepository, DraftStore, parseMemoMarkdown, normalizeTags, DEFAULT_SETTINGS, dailyOrder };
