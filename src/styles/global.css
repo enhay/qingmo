@@ -551,11 +551,6 @@
 .qm-action-separator{height:1px;background:var(--qm-border);margin:5px 6px}
 .qm-root .qm-card .qm-document-title{display:block;width:100%;min-height:44px;text-align:left;font-size:18px;font-weight:600;line-height:1.5;margin:2px 0 8px}
 .qm-sheet{container-type:inline-size}
-.qm-tools .qm-format-inline{display:none}
-@container (min-width:460px){
-  .qm-tools .qm-format-inline{display:inline-flex}
-  .qm-tools .qm-format-more{display:none}
-}
 .qm-primary {
   background:var(--qm-brand)!important;
   color:white!important;
@@ -1131,7 +1126,7 @@ to {
 .qm-input [data-type~=u] { text-decoration:underline; }
 .qm-input [data-type~=mark] { background:#ffeb80; color:#252525; }
 .qm-input .qm-editor-tag { color:#368bd6; font-style:normal; }
-.qm-tools [aria-pressed=true],.qm-tag-option[aria-selected=true] { color:var(--qm-brand-bright); background:var(--qm-fill); }
+.qm-root .qm-tools .qm-button[aria-pressed=true],.qm-tag-option[aria-selected=true] { color:var(--qm-brand-bright); background:var(--qm-fill); }
 .qm-input::highlight(qm-tag-input) { color:#368bd6; }
 .qm-body [data-type~=strong] { font-weight:bold; }
 .qm-body [data-type~=em] { font-style:italic; }
@@ -1203,3 +1198,6 @@ to {
 .qm-view-group-title{font-size:13px;font-weight:400;color:var(--qm-text-secondary);margin:20px 16px 8px}
 .qm-view-author{margin-left:10px;font-size:13px;font-weight:400;color:var(--qm-text-secondary)}
 .qm-view-symbol svg{width:30px;height:30px}
+
+.qm-root[data-layout=mobile] .qm-tools .qm-send{width:44px;min-width:44px}
+.qm-root[data-layout=mobile] .qm-tools .qm-record-button{margin-right:0}

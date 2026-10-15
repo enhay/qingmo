@@ -1,0 +1,942 @@
+{
+  "baselineShortcuts": [
+    {
+      "name": "native-control",
+      "saves": [],
+      "draft": {
+        "text": "",
+        "images": []
+      },
+      "extra": "<b>native</b>"
+    },
+    {
+      "name": "cmd-bold",
+      "saves": [
+        {
+          "text": "<span data-type=\"strong\">before</span>after",
+          "images": []
+        }
+      ],
+      "draft": {
+        "text": "",
+        "images": []
+      },
+      "extra": {
+        "on": {
+          "draft": {
+            "text": "<span data-type=\"strong\">before</span>",
+            "images": []
+          },
+          "html": "<b>before</b>",
+          "saves": [],
+          "active": [
+            "加粗"
+          ],
+          "selected": [],
+          "focus": "记录想法"
+        },
+        "saved": {
+          "text": "<span data-type=\"strong\">before</span>after",
+          "images": []
+        }
+      }
+    },
+    {
+      "name": "cmd-italic",
+      "saves": [
+        {
+          "text": "<span data-type=\"em\">before</span>after",
+          "images": []
+        }
+      ],
+      "draft": {
+        "text": "",
+        "images": []
+      },
+      "extra": {
+        "on": {
+          "draft": {
+            "text": "<span data-type=\"em\">before</span>",
+            "images": []
+          },
+          "html": "<i>before</i>",
+          "saves": [],
+          "active": [],
+          "selected": [],
+          "focus": "记录想法"
+        },
+        "saved": {
+          "text": "<span data-type=\"em\">before</span>after",
+          "images": []
+        }
+      }
+    },
+    {
+      "name": "cmd-underline",
+      "saves": [
+        {
+          "text": "<span data-type=\"u\">before</span>after",
+          "images": []
+        }
+      ],
+      "draft": {
+        "text": "",
+        "images": []
+      },
+      "extra": {
+        "on": {
+          "draft": {
+            "text": "<span data-type=\"u\">before</span>",
+            "images": []
+          },
+          "html": "<u>before</u>",
+          "saves": [],
+          "active": [
+            "下划线"
+          ],
+          "selected": [],
+          "focus": "记录想法"
+        },
+        "saved": {
+          "text": "<span data-type=\"u\">before</span>after",
+          "images": []
+        }
+      }
+    },
+    {
+      "name": "md-bold",
+      "saves": [
+        {
+          "text": "\\*\\*bold\\*\\*tail",
+          "images": []
+        }
+      ],
+      "draft": {
+        "text": "",
+        "images": []
+      },
+      "extra": {
+        "text": "\\*\\*bold\\*\\*tail",
+        "images": []
+      }
+    },
+    {
+      "name": "md-italic",
+      "saves": [
+        {
+          "text": "\\*italic\\*tail",
+          "images": []
+        }
+      ],
+      "draft": {
+        "text": "",
+        "images": []
+      },
+      "extra": {
+        "text": "\\*italic\\*tail",
+        "images": []
+      }
+    },
+    {
+      "name": "md-strike",
+      "saves": [
+        {
+          "text": "~~strike~~tail",
+          "images": []
+        }
+      ],
+      "draft": {
+        "text": "",
+        "images": []
+      },
+      "extra": {
+        "text": "~~strike~~tail",
+        "images": []
+      }
+    },
+    {
+      "name": "md-code",
+      "saves": [
+        {
+          "text": "\\`code\\`tail",
+          "images": []
+        }
+      ],
+      "draft": {
+        "text": "",
+        "images": []
+      },
+      "extra": {
+        "text": "\\`code\\`tail",
+        "images": []
+      }
+    },
+    {
+      "name": "md-link",
+      "saves": [
+        {
+          "text": "\\[link\\](https://example.com)tail",
+          "images": []
+        }
+      ],
+      "draft": {
+        "text": "",
+        "images": []
+      },
+      "extra": {
+        "text": "\\[link\\](https://example.com)tail",
+        "images": []
+      }
+    },
+    {
+      "name": "md-unordered",
+      "saves": [
+        {
+          "text": "\\- tail",
+          "images": []
+        }
+      ],
+      "draft": {
+        "text": "",
+        "images": []
+      },
+      "extra": {
+        "text": "\\- tail",
+        "images": []
+      }
+    },
+    {
+      "name": "md-ordered",
+      "saves": [
+        {
+          "text": "1\\. tail",
+          "images": []
+        }
+      ],
+      "draft": {
+        "text": "",
+        "images": []
+      },
+      "extra": {
+        "text": "1\\. tail",
+        "images": []
+      }
+    },
+    {
+      "name": "md-quote",
+      "saves": [
+        {
+          "text": "\\> tail",
+          "images": []
+        }
+      ],
+      "draft": {
+        "text": "",
+        "images": []
+      },
+      "extra": {
+        "text": "\\> tail",
+        "images": []
+      }
+    },
+    {
+      "name": "md-heading",
+      "saves": [
+        {
+          "text": "\\# tail",
+          "images": []
+        }
+      ],
+      "draft": {
+        "text": "",
+        "images": []
+      },
+      "extra": {
+        "text": "\\# tail",
+        "images": []
+      }
+    },
+    {
+      "name": "md-fence",
+      "saves": [
+        {
+          "text": "\\`\\`\\`",
+          "images": []
+        }
+      ],
+      "draft": {
+        "text": "",
+        "images": []
+      },
+      "extra": {
+        "text": "\\`\\`\\`",
+        "images": []
+      }
+    },
+    {
+      "name": "toolbar-加粗",
+      "saves": [
+        {
+          "text": "<span data-type=\"strong\">format</span>plain",
+          "images": []
+        }
+      ],
+      "draft": {
+        "text": "",
+        "images": []
+      },
+      "extra": {
+        "on": {
+          "draft": {
+            "text": "<span data-type=\"strong\">format</span>",
+            "images": []
+          },
+          "html": "<b>format</b>",
+          "saves": [],
+          "active": [
+            "加粗"
+          ],
+          "selected": [],
+          "focus": "记录想法"
+        },
+        "saved": {
+          "text": "<span data-type=\"strong\">format</span>plain",
+          "images": []
+        }
+      }
+    },
+    {
+      "name": "toolbar-下划线",
+      "saves": [
+        {
+          "text": "<span data-type=\"u\">format</span>plain",
+          "images": []
+        }
+      ],
+      "draft": {
+        "text": "",
+        "images": []
+      },
+      "extra": {
+        "on": {
+          "draft": {
+            "text": "<span data-type=\"u\">format</span>",
+            "images": []
+          },
+          "html": "<u>format</u>",
+          "saves": [],
+          "active": [
+            "下划线"
+          ],
+          "selected": [],
+          "focus": "记录想法"
+        },
+        "saved": {
+          "text": "<span data-type=\"u\">format</span>plain",
+          "images": []
+        }
+      }
+    },
+    {
+      "name": "toolbar-高亮",
+      "saves": [
+        {
+          "text": "<span data-type=\"mark\">format</span>plain",
+          "images": []
+        }
+      ],
+      "draft": {
+        "text": "",
+        "images": []
+      },
+      "extra": {
+        "on": {
+          "draft": {
+            "text": "<span data-type=\"mark\">format</span>",
+            "images": []
+          },
+          "html": "<span style=\"background-color: rgb(255, 235, 128);\">format</span>",
+          "saves": [],
+          "active": [
+            "高亮"
+          ],
+          "selected": [],
+          "focus": "记录想法"
+        },
+        "saved": {
+          "text": "<span data-type=\"mark\">format</span>plain",
+          "images": []
+        }
+      }
+    },
+    {
+      "name": "toolbar-引用",
+      "saves": [
+        {
+          "text": "formatplain",
+          "images": []
+        }
+      ],
+      "draft": {
+        "text": "",
+        "images": []
+      },
+      "extra": {
+        "on": {
+          "draft": {
+            "text": "> format",
+            "images": []
+          },
+          "html": "<blockquote>format</blockquote>",
+          "saves": [],
+          "active": [
+            "引用"
+          ],
+          "selected": [],
+          "focus": "记录想法"
+        },
+        "saved": {
+          "text": "formatplain",
+          "images": []
+        }
+      }
+    },
+    {
+      "name": "list-无序列表",
+      "saves": [
+        {
+          "text": "- first\n- second\n\noutside",
+          "images": []
+        }
+      ],
+      "draft": {
+        "text": "",
+        "images": []
+      },
+      "extra": {
+        "two": {
+          "draft": {
+            "text": "- first\n- second",
+            "images": []
+          },
+          "html": "<ul><li>first</li><li>second</li></ul>",
+          "saves": [],
+          "active": [
+            "无序列表"
+          ],
+          "selected": [],
+          "focus": "记录想法"
+        },
+        "saved": {
+          "text": "- first\n- second\n\noutside",
+          "images": []
+        }
+      }
+    },
+    {
+      "name": "list-有序列表",
+      "saves": [
+        {
+          "text": "1. first\n2. second\n\noutside",
+          "images": []
+        }
+      ],
+      "draft": {
+        "text": "",
+        "images": []
+      },
+      "extra": {
+        "two": {
+          "draft": {
+            "text": "1. first\n2. second",
+            "images": []
+          },
+          "html": "<ol><li>first</li><li>second</li></ol>",
+          "saves": [],
+          "active": [
+            "有序列表"
+          ],
+          "selected": [],
+          "focus": "记录想法"
+        },
+        "saved": {
+          "text": "1. first\n2. second\n\noutside",
+          "images": []
+        }
+      }
+    },
+    {
+      "name": "list-indent-tab",
+      "saves": [],
+      "draft": {
+        "text": "- parent\n- child",
+        "images": []
+      },
+      "extra": {
+        "draft": {
+          "text": "- parent\n- child",
+          "images": []
+        },
+        "html": "<ul><li>parent</li><li>child</li></ul>",
+        "saves": [],
+        "active": [
+          "无序列表"
+        ],
+        "selected": [],
+        "focus": "标签"
+      }
+    },
+    {
+      "name": "undo-redo",
+      "saves": [],
+      "draft": {
+        "text": "<span data-type=\"strong\">undo</span>",
+        "images": []
+      },
+      "extra": {
+        "bold": {
+          "draft": {
+            "text": "<span data-type=\"strong\">undo</span>",
+            "images": []
+          },
+          "html": "<b>undo</b>",
+          "saves": [],
+          "active": [
+            "加粗"
+          ],
+          "selected": [],
+          "focus": "记录想法"
+        },
+        "undone": {
+          "draft": {
+            "text": "undo",
+            "images": []
+          },
+          "html": "undo",
+          "saves": [],
+          "active": [],
+          "selected": [],
+          "focus": "记录想法"
+        },
+        "redone": {
+          "draft": {
+            "text": "<span data-type=\"strong\">undo</span>",
+            "images": []
+          },
+          "html": "<b>undo</b>",
+          "saves": [],
+          "active": [
+            "加粗"
+          ],
+          "selected": [],
+          "focus": "记录想法"
+        }
+      }
+    },
+    {
+      "name": "enter-shift-enter",
+      "saves": [],
+      "draft": {
+        "text": "first\nlineparagraph",
+        "images": []
+      },
+      "extra": {
+        "draft": {
+          "text": "first\nlineparagraph",
+          "images": []
+        },
+        "html": "first\nline<div>paragraph</div>",
+        "saves": [],
+        "active": [],
+        "selected": [],
+        "focus": "记录想法"
+      }
+    },
+    {
+      "name": "tag-select",
+      "saves": [
+        {
+          "text": "#阅读# 正文",
+          "images": []
+        }
+      ],
+      "draft": {
+        "text": "",
+        "images": []
+      },
+      "extra": {
+        "selected": {
+          "draft": {
+            "text": "#阅读",
+            "images": []
+          },
+          "html": "#阅读",
+          "saves": [],
+          "active": [],
+          "selected": [
+            "#阅读"
+          ],
+          "focus": "记录想法"
+        },
+        "saved": {
+          "text": "#阅读# 正文",
+          "images": []
+        }
+      }
+    },
+    {
+      "name": "tag-new",
+      "saves": [
+        {
+          "text": "#全新标签# 正文",
+          "images": []
+        }
+      ],
+      "draft": {
+        "text": "",
+        "images": []
+      },
+      "extra": {
+        "text": "#全新标签# 正文",
+        "images": []
+      }
+    },
+    {
+      "name": "tag-escape",
+      "saves": [],
+      "draft": {
+        "text": "#阅读",
+        "images": []
+      },
+      "extra": ""
+    },
+    {
+      "name": "empty-send",
+      "saves": [],
+      "draft": {
+        "text": "",
+        "images": []
+      },
+      "extra": []
+    },
+    {
+      "name": "save-failure",
+      "saves": [
+        {
+          "text": "preserve",
+          "images": []
+        }
+      ],
+      "draft": {
+        "text": "preserve",
+        "images": []
+      },
+      "extra": {
+        "draft": {
+          "text": "preserve",
+          "images": []
+        },
+        "html": "preserve",
+        "saves": [
+          {
+            "text": "preserve",
+            "images": []
+          }
+        ],
+        "active": [],
+        "selected": [],
+        "focus": "记录想法"
+      }
+    },
+    {
+      "name": "ime-enter-synthetic",
+      "saves": [
+        {
+          "text": "组合输入",
+          "images": []
+        }
+      ],
+      "draft": {
+        "text": "",
+        "images": []
+      },
+      "extra": {
+        "during": {
+          "draft": {
+            "text": "组合输入",
+            "images": []
+          },
+          "html": "组合输入",
+          "saves": [],
+          "active": [],
+          "selected": [],
+          "focus": "记录想法"
+        },
+        "saved": {
+          "text": "组合输入",
+          "images": []
+        }
+      }
+    }
+  ],
+  "native": [
+    {
+      "name": "cmd-bold",
+      "payload": {
+        "text": "<span data-type=\"strong\">before</span>after",
+        "images": []
+      },
+      "id": "20261015234015-x7xhrb4",
+      "markdown": "**before**after\n"
+    },
+    {
+      "name": "cmd-italic",
+      "payload": {
+        "text": "<span data-type=\"em\">before</span>after",
+        "images": []
+      },
+      "id": "20261015234015-fn1jubg",
+      "markdown": "*before*after\n"
+    },
+    {
+      "name": "cmd-underline",
+      "payload": {
+        "text": "<span data-type=\"u\">before</span>after",
+        "images": []
+      },
+      "id": "20261015234015-4xqg46e",
+      "markdown": "<u>before</u>after\n"
+    },
+    {
+      "name": "list-无序列表",
+      "payload": {
+        "text": "- first\n- second\n\noutside",
+        "images": []
+      },
+      "id": "20261015234015-0kt9jj2",
+      "markdown": "- first\n- second\n\noutside\n"
+    },
+    {
+      "name": "list-有序列表",
+      "payload": {
+        "text": "1. first\n2. second\n\noutside",
+        "images": []
+      },
+      "id": "20261015234015-ays3m2x",
+      "markdown": "1. first\n2. second\n\noutside\n"
+    },
+    {
+      "name": "tag-new",
+      "payload": {
+        "text": "#全新标签# 正文",
+        "images": []
+      },
+      "id": "20261015234015-b196m4k",
+      "markdown": "#全新标签# 正文\n"
+    },
+    {
+      "name": "enter-basic",
+      "payload": {
+        "text": "firstsecond",
+        "images": []
+      },
+      "id": "20261015234015-en75i73",
+      "markdown": "firstsecond\n"
+    },
+    {
+      "name": "shift-enter-basic",
+      "payload": {
+        "text": "first\nsecond",
+        "images": []
+      },
+      "id": "20261015234015-wb6ije1",
+      "markdown": "first\nsecond\n"
+    },
+    {
+      "name": "literal-~~strike~~",
+      "payload": {
+        "text": "~~strike~~",
+        "images": []
+      },
+      "id": "20261015234015-qjvhew2",
+      "markdown": "~~strike~~\n"
+    },
+    {
+      "name": "literal-==mark==",
+      "payload": {
+        "text": "==mark==",
+        "images": []
+      },
+      "id": "20261015234015-mn1dsdv",
+      "markdown": "==mark==\n"
+    },
+    {
+      "name": "literal----",
+      "payload": {
+        "text": "---",
+        "images": []
+      },
+      "id": "20261015234015-6fo07qc",
+      "markdown": "---\n"
+    },
+    {
+      "name": "clipboard-rich",
+      "payload": {
+        "text": "<span data-type=\"strong\">bold</span>\n\nsecond",
+        "images": []
+      },
+      "id": "20261015234015-rip4zat",
+      "markdown": "**bold**\n\nsecond\n"
+    }
+  ],
+  "nativeUpdate": [
+    {
+      "name": "native-recheck-list-无序列表",
+      "id": "20261015234015-0kt9jj2",
+      "markdown": "- \n- **first**\n- \n- **second**\n- \n\n**outside**\n"
+    },
+    {
+      "name": "native-recheck-shift-enter-basic",
+      "id": "20261015234015-wb6ije1",
+      "markdown": "first\n\nsecond\n"
+    }
+  ],
+  "oldMenuCommandTrace": [
+    {
+      "command": "hiliteColor",
+      "inert": true,
+      "focus": "高亮",
+      "selection": "",
+      "result": false
+    }
+  ],
+  "newFormatPopover": [
+    {
+      "width": 1280,
+      "theme": "light",
+      "combined": {
+        "draft": {
+          "text": "<span data-type=\"strong mark u\">sample</span>",
+          "images": []
+        },
+        "html": "<b><u style=\"background-color: rgb(255, 235, 128);\">sample</u></b>",
+        "expanded": "true",
+        "active": [
+          "加粗",
+          "下划线",
+          "高亮"
+        ],
+        "focus": "记录想法",
+        "overflow": false
+      },
+      "cleared": {
+        "draft": {
+          "text": "sample",
+          "images": []
+        },
+        "html": "sample",
+        "expanded": "true",
+        "active": [],
+        "focus": "记录想法",
+        "overflow": false
+      },
+      "saved": {
+        "text": "sample",
+        "images": []
+      }
+    },
+    {
+      "width": 402,
+      "theme": "dark",
+      "combined": {
+        "draft": {
+          "text": "<span data-type=\"strong mark u\">sample</span>",
+          "images": []
+        },
+        "html": "<b><u style=\"background-color: rgb(255, 235, 128);\">sample</u></b>",
+        "expanded": "true",
+        "active": [
+          "加粗",
+          "下划线",
+          "高亮"
+        ],
+        "focus": "记录想法",
+        "overflow": false
+      },
+      "cleared": {
+        "draft": {
+          "text": "sample",
+          "images": []
+        },
+        "html": "sample",
+        "expanded": "true",
+        "active": [],
+        "focus": "记录想法",
+        "overflow": false
+      },
+      "saved": {
+        "text": "sample",
+        "images": []
+      }
+    },
+    {
+      "width": 320,
+      "theme": "light",
+      "combined": {
+        "draft": {
+          "text": "<span data-type=\"strong mark u\">sample</span>",
+          "images": []
+        },
+        "html": "<b><u style=\"background-color: rgb(255, 235, 128);\">sample</u></b>",
+        "expanded": "true",
+        "active": [
+          "加粗",
+          "下划线",
+          "高亮"
+        ],
+        "focus": "记录想法",
+        "overflow": false
+      },
+      "cleared": {
+        "draft": {
+          "text": "sample",
+          "images": []
+        },
+        "html": "sample",
+        "expanded": "true",
+        "active": [],
+        "focus": "记录想法",
+        "overflow": false
+      },
+      "saved": {
+        "text": "sample",
+        "images": []
+      }
+    },
+    {
+      "name": "keyboard",
+      "saved": {
+        "text": "<span data-type=\"u\">keyboard</span>",
+        "images": []
+      }
+    },
+    {
+      "name": "outside-dismiss",
+      "passed": true
+    },
+    {
+      "name": "selection-changed",
+      "draft": {
+        "text": "first <span data-type=\"strong\">second</span>",
+        "images": []
+      },
+      "html": "first <b>second</b>",
+      "expanded": "true",
+      "active": [
+        "加粗"
+      ],
+      "focus": "记录想法",
+      "overflow": false
+    }
+  ]
+}
