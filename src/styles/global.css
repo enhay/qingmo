@@ -1020,10 +1020,10 @@ to {
 .qm-source{display:block!important;width:auto;min-height:44px!important;padding:0 2px!important;color:var(--qm-text-secondary)!important;font-size:13px!important;text-align:left}
 .qm-review-active>.qm-main,.qm-review-active>.qm-sidebar,.qm-review-active>.qm-compose-overlay{display:none!important}
 .qm-review{height:100%;width:100%;overflow:auto;background:var(--qm-bg);padding:env(safe-area-inset-top,0px) 12px env(safe-area-inset-bottom,0px)}
-.qm-review-header{display:flex;align-items:center;justify-content:space-between;height:60px;max-width:760px;margin:auto;font-size:17px}
+.qm-review-header{display:grid;grid-template-columns:72px minmax(0,1fr) 72px;align-items:center;height:60px;max-width:760px;margin:auto;font-size:17px}
 .qm-review-header .qm-button{min-width:44px}
-.qm-view-hero{text-align:center;margin:80px auto 58px}
-.qm-view-hero h2{margin:24px 0 0;color:var(--qm-brand);font-size:20px;font-weight:600}
+.qm-view-hero{text-align:center;margin:62px auto 32px}
+.qm-view-hero h2{margin:24px 0 0;background:linear-gradient(135deg,var(--qm-link),var(--qm-brand-bright));background-clip:text;color:transparent;font-size:20px;font-weight:600}
 .qm-view-list{max-width:640px;margin:0 auto;background:var(--qm-surface);border-radius:12px;padding:8px 12px}
 .qm-view-row{display:flex!important;width:100%;min-height:64px!important;text-align:left;gap:12px;padding:6px 16px!important;border-radius:8px}
 .qm-view-row:hover{background:var(--qm-fill)}
@@ -1044,8 +1044,8 @@ to {
 @media (prefers-reduced-motion:reduce){.qm-review .qm-card{animation:none}}
 .qm-root[data-layout=desktop]>.qm-review{grid-column:1 / -1;min-width:0;justify-self:stretch}
 .qm-root[data-layout=desktop] .qm-review .qm-button{min-width:44px;min-height:44px}
-.qm-review-dots{display:flex;justify-content:center;gap:10px;margin:20px auto}
-.qm-review-dot{width:8px;height:8px;border-radius:50%;background:var(--qm-text-disabled)}
+.qm-review-dots{display:flex;flex-wrap:wrap;justify-content:center;gap:10px;margin:20px auto;max-width:360px}
+.qm-review-dot{flex:0 0 8px;width:8px;height:8px;border-radius:50%;background:var(--qm-text-disabled)}
 .qm-review-dot[aria-current=true]{background:var(--qm-brand-bright)}
 .qm-review-retry{display:block!important;margin:0 auto;padding:0 20px!important;border-radius:8px;background:var(--qm-surface)!important}
 .qm-root[data-layout=desktop] .qm-review-retry{min-height:44px}
@@ -1163,10 +1163,38 @@ to {
 .qm-history-retention{font-size:12px;line-height:1.7;color:var(--qm-text-secondary);margin:18px 8px 0}
 
 .qm-scope-description { color:var(--qm-text-secondary); text-align:center; padding:8px 16px; }
-.qm-pin-badge { color:var(--qm-brand); margin-right:8px; }
 .qm-entry-row { display:contents; }
-.qm-entry-mic { position:absolute; bottom:calc(24px + env(safe-area-inset-bottom, 0px)); right:32px; z-index:2; min-width:44px; min-height:44px; color:var(--qm-text-secondary); }
+.qm-entry-mic { position:absolute; bottom:calc(max(env(safe-area-inset-bottom,0px),16px) + 6px); right:32px; z-index:2; min-width:44px; min-height:44px; color:var(--qm-text-secondary); }
 .qm-root[data-layout="desktop"] .qm-entry-mic { display:none; }
 
 .qm-root[data-layout="desktop"].qm-review-active > .qm-sidebar { display:block!important; grid-column:1; grid-row:1; }
 .qm-root[data-layout="desktop"].qm-review-active > .qm-review { grid-column:2; grid-row:1; width:100%; max-width:620px; padding-left:0; padding-right:0; }
+
+.qm-root{color-scheme:light}
+.qm-root[data-qm-theme=dark]{color-scheme:dark}
+.qm-review-header>strong{text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.qm-review-header>.qm-button:first-child{justify-self:start}
+.qm-review-header>.qm-button:last-child:not(:first-child){justify-self:end}
+.qm-root .qm-tools .qm-record-button{margin-left:auto;margin-right:4px;background:var(--qm-fill);border-radius:50%;flex-shrink:0}
+.qm-root .qm-tools .qm-record-button~.qm-send{margin-left:0}
+.qm-input [data-qm-audio]{display:none}
+.qm-input [data-type="block-ref"]{color:var(--qm-text-secondary);font-size:13px;line-height:20px}
+.qm-input p:has(>[data-type="block-ref"]:only-child),.qm-input>[data-type="block-ref"]{display:block;border-left:2px solid var(--qm-border);padding:4px 10px;margin:4px 0}
+.qm-body a.qm-reference{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;min-height:44px;border-left:2px solid var(--qm-border);padding:2px 10px;font-size:13px;line-height:20px;color:var(--qm-text-secondary);text-decoration:none}
+.qm-entry{padding-right:56px!important}
+.qm-entry span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+@container(max-width:380px){.qm-tools{flex-wrap:wrap}.qm-tools .qm-divider{display:none}}
+
+.qm-root .qm-scope-dialog{max-width:400px;background:var(--qm-bg);border-radius:12px;padding:20px}
+.qm-root .qm-settings-dialog{max-width:440px;background:var(--qm-bg)}
+.qm-scope-dialog .qm-dialog-heading{justify-content:center;position:relative;padding:0 36px}
+.qm-scope-dialog .qm-dialog-heading>.qm-button{position:absolute;right:0}
+.qm-root[data-layout=mobile] .qm-modal-backdrop:has(>.qm-scope-dialog){align-items:flex-end;padding:0}
+.qm-root[data-layout=mobile] .qm-scope-dialog{max-width:none;max-height:calc(100% - env(safe-area-inset-top,0px) - 16px);padding:28px 12px calc(env(safe-area-inset-bottom,0px) + 16px);border-radius:20px 20px 0 0;position:relative;box-shadow:var(--qm-shadow-sheet)}
+.qm-root[data-layout=mobile] .qm-scope-dialog:before{content:'';position:absolute;top:10px;left:calc(50% - 18px);width:36px;height:5px;border-radius:3px;background:var(--qm-border)}
+.qm-dialog-action{gap:12px}
+
+.qm-root .qm-ai-scope{display:flex;max-width:100%;margin:18px auto 0;min-height:44px;border-radius:22px;background:var(--qm-brand-tint);color:var(--qm-brand);font-size:13px;padding:0 12px;white-space:normal}
+.qm-view-group-title{font-size:13px;font-weight:400;color:var(--qm-text-secondary);margin:20px 16px 8px}
+.qm-view-author{margin-left:10px;font-size:13px;font-weight:400;color:var(--qm-text-secondary)}
+.qm-view-symbol svg{width:30px;height:30px}
