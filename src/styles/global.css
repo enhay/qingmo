@@ -857,7 +857,7 @@ to {
 .qm-root[data-layout=desktop] .qm-months span {
   width:21.6px}
 .qm-root[data-layout=desktop] .qm-date-filter {
-  right:-24px;
+  right:-10px;
   top:-12px;
   width:32px;
   height:32px}
