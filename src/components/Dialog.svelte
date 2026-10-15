@@ -1,7 +1,7 @@
 <script>
  import {onMount,tick} from 'svelte';
  import Button from './Button.svelte';
- let {label,closeLabel,onclose,children,actions=false,class:className='',anchor,point,root,state:dialogState,selected=false}=$props();
+ let {label,closeLabel,onclose,children,actions=false,heading=true,class:className='',anchor,point,root,state:dialogState,selected=false}=$props();
  let panel,backdrop,left=$state(8),top=$state(8);
  onMount(()=>{tick().then(()=>{
   if(actions&&root){
@@ -18,7 +18,7 @@
 <!-- svelte-ignore a11y_no_static_element_interactions -->
 <div bind:this={backdrop} class:qm-action-backdrop={actions} class="qm-modal-backdrop" onclick={e=>{if(e.target===backdrop)onclose();}} onkeydown={keyboard}>
  <div bind:this={panel} class={'qm-dialog '+className} class:qm-action-panel={actions} class:qm-history-selected={selected} role="dialog" aria-modal="true" aria-label={label} data-state={dialogState} style:left={actions?left+'px':undefined} style:top={actions?top+'px':undefined} tabindex="-1">
- {#if !actions}<div class="qm-dialog-heading"><strong>{label}</strong><Button label={closeLabel} icon="close" onclick={onclose}/></div>{/if}
+ {#if !actions&&heading}<div class="qm-dialog-heading"><strong>{label}</strong><Button label={closeLabel} icon="close" onclick={onclose}/></div>{/if}
  {@render children?.()}
  </div>
 </div>

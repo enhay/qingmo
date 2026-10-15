@@ -1,6 +1,7 @@
 .qm-root {
   --qm-bg:#f9f9f9;
   --qm-surface:#fff;
+  --qm-on-brand:#fff;
   --qm-fill:#ececec;
   --qm-border:#e8e8e8;
   --qm-border-strong:#d9d9d9;
@@ -1186,7 +1187,8 @@ to {
 @container(max-width:380px){.qm-tools{flex-wrap:wrap}.qm-tools .qm-divider{display:none}}
 
 .qm-root .qm-scope-dialog{max-width:400px;background:var(--qm-bg);border-radius:12px;padding:20px}
-.qm-root .qm-settings-dialog{max-width:440px;background:var(--qm-bg)}
+.qm-root .qm-settings-dialog{max-width:880px;height:min(680px,90%);padding:0;overflow:hidden;background:var(--qm-bg)}
+.qm-root[data-layout=mobile] .qm-settings-dialog{height:90%;border-radius:16px}
 .qm-scope-dialog .qm-dialog-heading{justify-content:center;position:relative;padding:0 36px}
 .qm-scope-dialog .qm-dialog-heading>.qm-button{position:absolute;right:0}
 .qm-root[data-layout=mobile] .qm-modal-backdrop:has(>.qm-scope-dialog){align-items:flex-end;padding:0}

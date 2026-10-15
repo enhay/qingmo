@@ -135,6 +135,7 @@
   "historyReplacesDraftConfirm": "这条笔记有未发送的草稿。恢复历史版本会替换该草稿，是否继续？",
   "historyRetention": "历史版本由思源保存，保留期限随思源设置。",
   "settingsGeneral": "通用",
+  "settingsBehavior": "使用偏好",
   "settingsTencent": "腾讯云语音识别",
   "settingsRecord": "记录",
   "settingsTranscription": "转写",
