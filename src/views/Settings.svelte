@@ -84,26 +84,26 @@ async function test(){testing=true;testResult='';testController=new AbortControl
  .qm-settings-heading h2{margin:0;font-size:22px;font-weight:600}
  .qm-settings-content{padding:8px 24px 24px;overflow:auto;min-height:0;flex:1}
  .qm-settings [role=tabpanel][hidden]{display:none}
- .qm-settings h3{font-size:13px;font-weight:400;color:var(--qm-text-secondary);margin:24px 16px 10px}
+ .qm-settings h3{font-size:13px;font-weight:400;color:var(--qm-text-secondary);margin:16px 16px 8px}
  .qm-settings-group{background:var(--qm-surface);border-radius:12px;overflow:hidden}
- .qm-settings .qm-setting-row{display:flex;align-items:center;justify-content:space-between;gap:24px;min-height:64px;margin:0;padding:10px 16px}
+ .qm-settings .qm-setting-row{display:flex;align-items:center;justify-content:space-between;gap:24px;min-height:52px;margin:0;padding:4px 16px}
  .qm-setting-row>span{flex-shrink:0}
  .qm-settings .qm-setting-row input:not([type=checkbox]),.qm-settings .qm-setting-row select{width:56%;min-width:0;margin:0;background:transparent;border-color:transparent;text-align:right;color:var(--qm-text-secondary)}
  .qm-settings .qm-setting-row input:focus,.qm-settings .qm-setting-row select:focus{border-color:var(--qm-brand);outline:none}
- .qm-settings .qm-setting-switch input{appearance:none;position:relative;flex:0 0 40px;width:40px;height:24px;border:0;border-radius:20px;background:var(--qm-fill);cursor:pointer;margin:10px 0}
+ .qm-settings .qm-setting-switch input{appearance:none;position:relative;flex:0 0 40px;width:40px;height:24px;border:0;border-radius:20px;background:var(--qm-fill);cursor:pointer;margin:0}
  .qm-setting-switch input:checked{background:var(--qm-brand)}
  .qm-setting-switch input:before{content:'';position:absolute;width:20px;height:20px;top:2px;left:2px;border-radius:50%;background:var(--qm-on-brand)}
  .qm-setting-switch input:checked:before{transform:translateX(16px)}
  .qm-setting-switch input:focus-visible{outline:2px solid var(--qm-brand);outline-offset:3px}
  .qm-settings-footer{padding:16px 24px;display:flex;justify-content:flex-end;flex-shrink:0}
  .qm-settings-footer :global(button){min-height:44px;padding:0 24px}
- .qm-credential{padding:16px}
+ .qm-credential{padding:8px 16px}
  .qm-credential-label{font-size:14px;color:var(--qm-text)}
- .qm-credential-value{display:flex;align-items:center;gap:8px;min-height:44px;margin-top:8px}
+ .qm-credential-value{display:flex;align-items:center;gap:8px;min-height:44px;margin-top:4px}
  .qm-settings .qm-credential-value input{flex:1;min-width:0;width:auto;margin:0;background:transparent}
  .qm-credential-value>span{flex:1;min-width:0;overflow-wrap:anywhere;color:var(--qm-text-secondary)}
  .qm-credential :global(button){color:var(--qm-link);min-height:44px;padding:0 8px}
- .qm-credential-test{display:flex;align-items:center;gap:12px;margin:20px 0 8px;flex-wrap:wrap}
+ .qm-credential-test{display:flex;align-items:center;gap:12px;margin:12px 0 8px;flex-wrap:wrap}
  .qm-credential-test :global(.qm-test-credentials){min-height:44px;border-radius:8px;background:var(--qm-brand-tint);color:var(--qm-brand);padding:0 16px;flex-shrink:0}
  .qm-credential-help{display:flex;align-items:center}
  .qm-credential-help :global(.qm-info-button){width:44px;height:44px;padding:0;color:var(--qm-text-secondary)}
