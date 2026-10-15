@@ -564,6 +564,24 @@
 .qm-primary.qm-danger {
   background:var(--qm-danger)!important;
   color:#fff!important}
+.qm-confirm-actions {
+  display:flex;
+  gap:12px;
+  margin-top:20px}
+.qm-root .qm-confirm-actions>.qm-button {
+  flex:1;
+  min-width:0;
+  width:auto;
+  min-height:44px;
+  margin:0;
+  padding:8px 16px;
+  border-radius:8px;
+  background:var(--qm-fill);
+  color:var(--qm-text)}
+.qm-confirm-actions>.qm-button:not(:disabled):hover {
+  filter:brightness(.95)}
+.qm-confirm-actions>.qm-button:disabled {
+  opacity:.5}
 .qm-settings label {
   display:block;
   margin:12px 0}
