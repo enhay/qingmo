@@ -33,7 +33,24 @@ export function renderBlockDOM(dom) {
         if (!/^\d{14}-[a-z0-9]{7}$/.test(ref.dataset.id)) continue;
         const link = document.createElement('span'); link.dataset.type = 'a'; link.dataset.href = 'siyuan://blocks/' + ref.dataset.id; link.textContent = ref.textContent; ref.replaceWith(link);
     }
+    // BlockDOM2HTML goes through Markdown, and Lute exports text inside inline formats without
+    // escaping it: bold "~~x~~" would come back as strikethrough. Shield that text with tokens.
+    const shielded = [], token = 'QMT' + Math.random().toString(36).slice(2).toUpperCase() + 'N';
+    for (const span of template.content.querySelectorAll('span[data-type]')) {
+        if (!span.dataset.type.split(' ').every(type => FORMAT_TYPES.has(type))) continue;
+        const walker = document.createTreeWalker(span, NodeFilter.SHOW_TEXT);
+        while (walker.nextNode()) {
+            const [, before, core, after] = walker.currentNode.nodeValue.match(/^(\s*)([\s\S]*?)(\s*)$/);
+            if (!core) continue;
+            walker.currentNode.nodeValue = before + token + shielded.length + 'Z' + after;
+            shielded.push(core);
+        }
+    }
     const lute = window.Lute.New();
     lute.SetTag(true); lute.SetMark(true);
-    return safeHTML(lute.BlockDOM2HTML(template.innerHTML));
+    const html = lute.BlockDOM2HTML(template.innerHTML).replace(new RegExp(token + '(\\d+)Z', 'g'), (_, index) => escapeHTML(shielded[index]));
+    return safeHTML(html);
 }
+
+const FORMAT_TYPES = new Set(['strong', 'em', 'u', 's', 'mark', 'sup', 'sub', 'kbd', 'text', 'a']);
+const escapeHTML = text => text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');

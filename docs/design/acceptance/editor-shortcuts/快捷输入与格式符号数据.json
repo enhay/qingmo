@@ -1,0 +1,155 @@
+{
+  "date": "2026-10-16",
+  "host": "SiYuan 3.8.7 隔离内核 .scratch/kernel，合成内容；Chrome 无头浏览器真实按键",
+  "formattedLiterals": {
+    "plain": {
+      "card": "<p><span data-type=\"strong\">~~x~~</span> <span data-type=\"strong\">$5$</span> <span data-type=\"strong\">==m==</span> <span data-type=\"strong\">*a*</span> <span data-type=\"strong\">&lt;i&gt;</span> <span data-type=\"strong\">a\\b</span></p>\n",
+      "editorText": "~~x~~ $5$ ==m== *a* <i> a\\b",
+      "clean": "<span data-type=\"strong\">\\~\\~x\\~\\~</span> <span data-type=\"strong\">\\$5\\$</span> <span data-type=\"strong\">\\=\\=m\\=\\=</span> <span data-type=\"strong\">\\*a\\*</span> <span data-type=\"strong\">&lt;i&gt;</span> <span data-type=\"strong\">a\\\\b</span>",
+      "dirty": "<span data-type=\"strong\">\\~\\~x\\~\\~</span> <span data-type=\"strong\">\\$5\\$</span> <span data-type=\"strong\">\\=\\=m\\=\\=</span> <span data-type=\"strong\">\\*a\\*</span> <span data-type=\"strong\">&lt;i&gt;</span> <span data-type=\"strong\">a\\\\b</span>",
+      "transcribed": null,
+      "segs": [],
+      "afterSave": {
+        "markdown": " **~~x~~**   **$5$**   **==m==**   ***a***   **&lt;i&gt;**  **a\\b**\n",
+        "card": "<p><span data-type=\"strong\">~~x~~</span> <span data-type=\"strong\">$5$</span> <span data-type=\"strong\">==m==</span> <span data-type=\"strong\">*a*</span> <span data-type=\"strong\">&lt;i&gt;</span> <span data-type=\"strong\">a\\b</span></p>\n",
+        "strike": false,
+        "math": false,
+        "mark": false,
+        "sup": false,
+        "pending": false,
+        "ref": false
+      }
+    },
+    "withNative": {
+      "card": "<p><span data-type=\"strong\">~~x~~</span> <span data-type=\"strong\">$5$</span> <span data-type=\"strong\">==m==</span> <span data-type=\"strong\">*a*</span> <span data-type=\"strong\">&lt;i&gt;</span> <span data-type=\"strong\">a\\b</span> 见 <a href=\"siyuan://blocks/20261016004818-qln9hf2\" rel=\"noopener noreferrer\">来源</a></p>\n<audio controls=\"\" src=\"assets/fix1-test.wav\" preload=\"none\"></audio>\n<p>尾段 <span data-type=\"em\">^up^</span></p>\n",
+      "editorText": "~~x~~ $5$ ==m== *a* <i> a\\b 见 来源转写文字 ~~t~~尾段 ^up^",
+      "clean": "<span data-type=\"strong\">\\~\\~x\\~\\~</span> <span data-type=\"strong\">\\$5\\$</span> <span data-type=\"strong\">\\=\\=m\\=\\=</span> <span data-type=\"strong\">\\*a\\*</span> <span data-type=\"strong\">&lt;i&gt;</span> <span data-type=\"strong\">a\\\\b</span> 见 ((20261016004818-qln9hf2 '来源'))\n\n\n\n<audio controls=\"controls\" src=\"assets/fix1-test.wav\"></audio>\n{: id=\"20261016004818-o06kcp1\" updated=\"20261016004818\" custom-qingmo-transcribe=\"pending\"}\n\n尾段 <span data-type=\"em\">\\^up\\^</span>",
+      "dirty": "<span data-type=\"strong\">\\~\\~x\\~\\~</span> <span data-type=\"strong\">\\$5\\$</span> <span data-type=\"strong\">\\=\\=m\\=\\=</span> <span data-type=\"strong\">\\*a\\*</span> <span data-type=\"strong\">&lt;i&gt;</span> <span data-type=\"strong\">a\\\\b</span> 见 ((20261016004818-qln9hf2 '来源'))\n\n\n\n<audio controls=\"controls\" src=\"assets/fix1-test.wav\"></audio>\n{: id=\"20261016004818-o06kcp1\" updated=\"20261016004818\" custom-qingmo-transcribe=\"pending\"}\n\n尾段 <span data-type=\"em\">\\^up\\^</span>",
+      "transcribed": "<span data-type=\"strong\">\\~\\~x\\~\\~</span> <span data-type=\"strong\">\\$5\\$</span> <span data-type=\"strong\">\\=\\=m\\=\\=</span> <span data-type=\"strong\">\\*a\\*</span> <span data-type=\"strong\">&lt;i&gt;</span> <span data-type=\"strong\">a\\\\b</span> 见 ((20261016004818-qln9hf2 '来源'))\n\n\n\n<audio controls=\"controls\" src=\"assets/fix1-test.wav\"></audio>\n{: id=\"20261016004818-o06kcp1\" updated=\"20261016004818\"}\n\n转写文字 \\~\\~t\\~\\~\n\n尾段 <span data-type=\"em\">\\^up\\^</span>",
+      "segs": [
+        {
+          "key": "1ccb8d7e-008f-4fdd-a4fe-06cacc244e0f",
+          "path": "assets/fix1-test.wav",
+          "pending": true
+        }
+      ],
+      "afterSave": {
+        "markdown": " **~~x~~**   **$5$**   **==m==**   ***a***   **&lt;i&gt;**  **a\\b** 见 ((20261016004818-qln9hf2 '来源'))\n\n<audio controls=\"controls\" src=\"assets/fix1-test.wav\"></audio>\n\n{: id=\"20261016004818-o06kcp1\" updated=\"20261016004818\"}\n\n转写文字 \\~\\~t\\~\\~\n\n尾段  *^up^*\n",
+        "card": "<p><span data-type=\"strong\">~~x~~</span> <span data-type=\"strong\">$5$</span> <span data-type=\"strong\">==m==</span> <span data-type=\"strong\">*a*</span> <span data-type=\"strong\">&lt;i&gt;</span> <span data-type=\"strong\">a\\b</span> 见 <a href=\"siyuan://blocks/20261016004818-qln9hf2\" rel=\"noopener noreferrer\">来源</a></p>\n<audio controls=\"\" src=\"assets/fix1-test.wav\" preload=\"none\"></audio>\n<p>转写文字 ~~t~~</p>\n<p>尾段 <span data-type=\"em\">^up^</span></p>\n",
+        "strike": false,
+        "math": false,
+        "mark": false,
+        "sup": false,
+        "pending": false,
+        "ref": true
+      }
+    }
+  },
+  "dateFilter": [
+    "1280 {\"desktopButton\":true,\"hidden\":true,\"monthsInput\":false,\"scroll\":0,\"picked\":\"2026-10-15，0 条速记\",\"errors\":[]}",
+    "640 {\"desktopButton\":true,\"hidden\":true,\"monthsInput\":false,\"scroll\":0,\"picked\":\"2026-10-15，0 条速记\",\"errors\":[]}",
+    "402 {\"desktopButton\":false,\"hidden\":false,\"monthsInput\":true,\"scroll\":0,\"picked\":null,\"errors\":[]}"
+  ],
+  "markdownShortcuts": {
+    "bold": {
+      "html": "<b>bold</b>​ after",
+      "value": "<span data-type=\"strong\">bold</span> after",
+      "focus": "ed",
+      "kernel": "**bold** after\n",
+      "reedit": "<span data-type=\"strong\">bold</span> after"
+    },
+    "italic": {
+      "html": "<i>it</i>​ x",
+      "value": "<span data-type=\"em\">it</span> x",
+      "focus": "ed"
+    },
+    "code": {
+      "html": "<code>code</code>​ y",
+      "value": "`code` y",
+      "focus": "ed"
+    },
+    "link": {
+      "html": "<a href=\"https://a.com\">链接</a>​ z",
+      "value": "[链接](https://a.com) z",
+      "focus": "ed",
+      "kernel": "[链接](https://a.com) z\n",
+      "reedit": "[链接](https://a.com) z"
+    },
+    "badLink": {
+      "html": "[x](javascript:alert(1)) z",
+      "value": "\\[x\\](javascript:alert(1)) z",
+      "focus": "ed"
+    },
+    "math": {
+      "html": "2*3*4 and a**b**c",
+      "value": "2\\*3\\*4 and a\\*\\*b\\*\\*c",
+      "focus": "ed"
+    },
+    "ul": {
+      "html": "<ul><li>a</li><li>b</li></ul>",
+      "value": "- a\n- b",
+      "focus": "ed"
+    },
+    "ol3": {
+      "html": "<ol start=\"3\"><li>a</li><li>b</li></ol>",
+      "value": "3. a\n4. b",
+      "focus": "ed",
+      "kernel": "3. a\n4. b\n",
+      "reedit": "3. a\n4. b"
+    },
+    "quote": {
+      "html": "<blockquote>q</blockquote>",
+      "value": "> q",
+      "focus": "ed"
+    },
+    "fence": {
+      "html": "<pre data-language=\"js\">const a=1;<br><br>b()<br></pre><p>after</p>",
+      "value": "```js\nconst a=1;\n\nb()\n```\n\nafter",
+      "focus": "ed",
+      "kernel": "```js\nconst a=1;\n\nb()\n```\n\nafter\n",
+      "reedit": "```js\nconst a=1;\n\nb()\n```\n\nafter"
+    },
+    "tab": {
+      "html": "<ul><li>a</li><ul><li>b</li></ul><li>c</li></ul>",
+      "value": "- a\n  - b\n- c",
+      "focus": "ed",
+      "kernel": "- a\n\n  - b\n- c\n",
+      "reedit": "- a\n  - b\n- c"
+    },
+    "tabOl": {
+      "html": "<ol><li>a</li><ol><li>b</li><li>c</li></ol></ol>",
+      "value": "1. a\n   1. b\n   2. c",
+      "focus": "ed",
+      "kernel": "1. a\n\n   1. b\n   2. c\n",
+      "reedit": "1. a\n   1. b\n   2. c"
+    },
+    "tabOutside": {
+      "html": "plain",
+      "value": "plain",
+      "focus": "after"
+    },
+    "undoBold": {
+      "html": "**u**",
+      "value": "\\*\\*u\\*\\*",
+      "focus": "ed"
+    },
+    "midLine": {
+      "html": "x - y",
+      "value": "x - y",
+      "focus": "ed"
+    },
+    "fenceMid": {
+      "html": "<pre>a<br>c</pre><p>b</p><p><br></p><p>tail</p>",
+      "value": "```\na\nc\n```\n\nb\n\n\n\n\ntail",
+      "focus": "ed",
+      "kernel": "```\na\nc\n```\n\nb\n\ntail\n",
+      "reedit": "```\na\nc\n```\n\nb\n\ntail"
+    }
+  },
+  "composerSubmit": {
+    "first": "first\n\nsecond \\~\\~x\\~\\~ \\$5",
+    "list": "- a\n- b",
+    "shortcut": "- <span data-type=\"strong\">重点</span> 和 `代码`\n  - #标# 续写",
+    "errors": []
+  }
+}

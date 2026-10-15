@@ -139,8 +139,8 @@ export default class QingMoPlugin extends Plugin {
         const editor = createEditor({element, renderMarkdown: markdown => {const lute=window.Lute.New();lute.SetTag(true);lute.SetMark(true);return safeHTML(lute.MarkdownStr('qingmo',markdown));}});
         try {
             const memo = await this.repository.get(id);
-            if (!memo || !['s','p'].includes(memo.type) || !editor.canEdit(memo.markdown)) throw Object.assign(new Error('NATIVE_EDIT_REQUIRED'), {code:'NATIVE_EDIT_REQUIRED'});
-            editor.load(memo.markdown);
+            if (!memo || !['s','p'].includes(memo.type) || !editor.canEdit(memo.markdown, memo.dom)) throw Object.assign(new Error('NATIVE_EDIT_REQUIRED'), {code:'NATIVE_EDIT_REQUIRED'});
+            editor.load(memo.markdown, renderBlockDOM(memo.dom));
             let baseline = memo.markdown;
             const segments = editor.audioSegments().filter(item=>item.pending);
             for (const segment of segments) {
