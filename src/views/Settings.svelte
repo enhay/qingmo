@@ -8,7 +8,8 @@
  const {options,shared}=getContext(CONTEXT),{repository,t}=options;
  let {first=false,review=false,onclose,onnotify,onsaved}= $props();
  const uid=$props.id();
- let tab=$state('general'),infoOpen=$state(false),infoRoot=$state();
+ let tab=$state('general'),infoOpen=$state(false),infoRoot=$state(),infoPosition=$state({});
+ function openInfo(){const main=infoRoot.closest('.qm-settings-main'),r=main.getBoundingClientRect(),a=infoRoot.getBoundingClientRect(),below=r.bottom-a.bottom,above=a.top-r.top;infoPosition={left:Math.max(8,Math.min(a.left-r.left,r.width-368)),width:Math.min(360,r.width-16),height:Math.max(0,Math.min(240,Math.max(below,above)-8)),...(below>=240||below>=above?{top:a.bottom-r.top}:{bottom:r.bottom-a.top})};infoOpen=true;}
  function dismissInfo(event){if(event.key==='Escape'&&infoOpen){event.preventDefault();event.stopPropagation();infoOpen=false;}}
  let editing=$state({}),testing=$state(false),testResult=$state(''),testController;
  let books=$state([]),saving=$state(false),draft=$state({}),initial=$state({});
@@ -18,6 +19,7 @@
  async function save(e){e.preventDefault();if(review)draft.reviewCount=Math.max(1,Math.min(50,Math.trunc(Number(draft.reviewCount))||DEFAULT_SETTINGS.reviewCount));else if(!draft.notebook||!draft.pathTemplate?.trim()){tab='general';return;}const patch=Object.fromEntries(Object.entries(draft).filter(([key,value])=>value!==initial[key]));saving=true;try{await shared.saveSettings(patch);const wasFirst=first;onclose();onsaved?.(wasFirst);}catch{saving=false;onnotify('settingsFailed');}}
 async function test(){testing=true;testResult='';testController=new AbortController();try{await transcribeWav(pcmToWav(new Float32Array(16000),16000),{secretId:draft.tencentSecretId,secretKey:draft.tencentSecretKey,request:options.request,signal:testController.signal});if(!testController.signal.aborted)testResult='credentialsReady';}catch(e){if(!testController.signal.aborted)testResult='audioError_'+audioErrorCode(e);}finally{testing=false;}}
 </script>
+<svelte:window onresize={()=>infoOpen=false}/>
 <form class="qm-settings" class:qm-settings-review={review} onsubmit={save}>
  {#if !review}<aside class="qm-settings-nav">
   <div class="qm-settings-caption">{t('settings')}</div>
@@ -27,7 +29,7 @@ async function test(){testing=true;testResult='';testController=new AbortControl
  </aside>{/if}
  <div class="qm-settings-main">
   {#if !review}<header class="qm-settings-heading"><h2>{t(tab==='general'?'settingsGeneral':'settingsTranscription')}</h2><Button label={t('closeDialog')} icon="close" onclick={onclose}/></header>{/if}
-  <div class="qm-settings-content">
+  <div class="qm-settings-content" onscroll={()=>infoOpen=false}>
   {#if first}<p class="qm-setting-note">{t('chooseNotebook')}</p>{/if}
   {#if review}<label>{t('reviewCount')}<input type="number" min="1" max="50" bind:value={draft.reviewCount}/></label>
   {:else}
@@ -54,9 +56,9 @@ async function test(){testing=true;testResult='';testController=new AbortControl
     </div>
     <div class="qm-credential-test">
      <Button class="qm-test-credentials" label={t('testCredentials')} disabled={testing||!draft.tencentSecretId||!draft.tencentSecretKey} onclick={test}/>
-     <div bind:this={infoRoot} class="qm-credential-help" role="group" aria-label={t('transcriptionInfo')} onpointerenter={()=>infoOpen=true} onpointerleave={()=>{if(!infoRoot.contains(infoRoot.ownerDocument.activeElement))infoOpen=false;}}>
-      <Button class="qm-info-button" label={t('transcriptionInfo')} title="" icon="info" aria-expanded={infoOpen} aria-controls={uid+'-info'} aria-describedby={infoOpen?uid+'-info':undefined} onfocus={()=>infoOpen=true} onblur={()=>infoOpen=false} onclick={()=>infoOpen=true} onkeydown={dismissInfo}/>
-      <div id={uid+'-info'} role="tooltip" class="qm-credential-info" hidden={!infoOpen}>{#each ['credentialTestCost','credentialSecurity','credentialBilling','credentialSync'] as key}<p>{t(key)}</p>{/each}</div>
+     <div bind:this={infoRoot} class="qm-credential-help" role="group" aria-label={t('transcriptionInfo')} onpointerenter={openInfo} onpointerleave={()=>{if(!infoRoot.contains(infoRoot.ownerDocument.activeElement))infoOpen=false;}}>
+      <Button class="qm-info-button" label={t('transcriptionInfo')} title="" icon="info" aria-expanded={infoOpen} aria-controls={uid+'-info'} aria-describedby={infoOpen?uid+'-info':undefined} onfocus={openInfo} onblur={()=>infoOpen=false} onclick={openInfo} onkeydown={dismissInfo}/>
+      <div id={uid+'-info'} role="tooltip" class="qm-credential-info" style:left={infoPosition.left+'px'} style:top={infoPosition.top===undefined?'auto':infoPosition.top+'px'} style:bottom={infoPosition.bottom===undefined?'auto':infoPosition.bottom+'px'} style:width={infoPosition.width+'px'} style:max-height={infoPosition.height+'px'} hidden={!infoOpen}>{#each ['credentialTestCost','credentialSecurity','credentialBilling','credentialSync'] as key}<p>{t(key)}</p>{/each}</div>
      </div>
      <p role="status" class:qm-credential-ok={testResult==='credentialsReady'}>{testResult?t(testResult):''}</p>
     </div>
@@ -77,7 +79,7 @@ async function test(){testing=true;testResult='';testController=new AbortControl
  .qm-settings-nav button :global(svg){width:20px;height:20px;flex-shrink:0}
  .qm-settings-nav button[aria-selected=true]{background:var(--qm-brand);color:var(--qm-on-brand);font-weight:600}
  .qm-settings-nav button:focus-visible{outline:2px solid var(--qm-brand);outline-offset:2px}
- .qm-settings-main{min-width:0;min-height:0;display:flex;flex-direction:column}
+ .qm-settings-main{position:relative;min-width:0;min-height:0;display:flex;flex-direction:column}
  .qm-settings-heading{display:flex;justify-content:space-between;align-items:center;padding:16px 24px;flex-shrink:0}
  .qm-settings-heading h2{margin:0;font-size:22px;font-weight:600}
  .qm-settings-content{padding:8px 24px 24px;overflow:auto;min-height:0;flex:1}
@@ -101,12 +103,12 @@ async function test(){testing=true;testResult='';testController=new AbortControl
  .qm-settings .qm-credential-value input{flex:1;min-width:0;width:auto;margin:0;background:transparent}
  .qm-credential-value>span{flex:1;min-width:0;overflow-wrap:anywhere;color:var(--qm-text-secondary)}
  .qm-credential :global(button){color:var(--qm-link);min-height:44px;padding:0 8px}
- .qm-credential-test{position:relative;display:flex;align-items:center;gap:12px;margin:20px 0 8px;flex-wrap:wrap}
+ .qm-credential-test{display:flex;align-items:center;gap:12px;margin:20px 0 8px;flex-wrap:wrap}
  .qm-credential-test :global(.qm-test-credentials){min-height:44px;border-radius:8px;background:var(--qm-brand-tint);color:var(--qm-brand);padding:0 16px;flex-shrink:0}
  .qm-credential-help{display:flex;align-items:center}
  .qm-credential-help :global(.qm-info-button){width:44px;height:44px;padding:0;color:var(--qm-text-secondary)}
  .qm-credential-help :global(svg){width:18px;height:18px}
- .qm-credential-info{position:absolute;top:100%;left:0;z-index:2;width:min(360px,100%);max-height:240px;overflow:auto;padding:12px 16px;border:1px solid var(--qm-border-strong);border-radius:10px;background:var(--qm-surface);box-shadow:0 4px 16px var(--qm-fill)}
+ .qm-credential-info{position:absolute;box-sizing:border-box;z-index:2;overflow:auto;padding:12px 16px;border:1px solid var(--qm-border-strong);border-radius:10px;background:var(--qm-surface);box-shadow:0 4px 16px var(--qm-fill)}
  .qm-credential-info[hidden]{display:none}
  .qm-credential-test .qm-credential-info p{margin:0 0 8px;font-size:12px;line-height:20px;color:var(--qm-text-secondary)}
  .qm-credential-test .qm-credential-info p:last-child{margin-bottom:0}
