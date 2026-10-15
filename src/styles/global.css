@@ -856,15 +856,19 @@ to {
   width:256px}
 .qm-root[data-layout=desktop] .qm-months span {
   width:21.6px}
-.qm-root[data-layout=desktop] .qm-date-filter {
-  right:-10px;
-  top:-12px;
+/* 桌面左栏被 12 周热力图占满，日期筛选放在顶部操作组，由按钮打开系统日期选择器。 */
+.qm-root[data-layout=desktop] .qm-side-actions {
+  position:relative}
+.qm-date-hidden {
+  position:absolute;
+  left:0;
+  bottom:0;
   width:32px;
-  height:32px}
-.qm-root[data-layout=desktop] .qm-date-filter::-webkit-calendar-picker-indicator {
-  width:16px;
-  height:16px;
-  margin:8px}
+  height:1px;
+  padding:0;
+  border:0;
+  opacity:0;
+  pointer-events:none}
 .qm-root[data-layout=desktop] .qm-nav {
   margin:0}
 .qm-root[data-layout=desktop] .qm-nav-row {
