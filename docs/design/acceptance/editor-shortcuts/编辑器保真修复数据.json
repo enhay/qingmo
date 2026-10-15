@@ -1,0 +1,245 @@
+{
+  "date": "2026-10-16",
+  "host": "SiYuan 3.8.7 隔离内核 .scratch/kernel，合成内容",
+  "editor": {
+    "enter": {
+      "html": "first<div>second</div>",
+      "value": "first\n\nsecond"
+    },
+    "enterBlankLine": {
+      "html": "first<div>second</div><div><br></div><div>third</div>",
+      "value": "first\n\nsecond\n\n\n\n\nthird"
+    },
+    "listBoldAll": {
+      "loaded": "<ul>\n<li>a</li>\n<li>b</li>\n</ul>\n",
+      "html": "<ul><li><b>a</b></li><li><b>b</b></li></ul>",
+      "value": "- <span data-type=\"strong\">a</span>\n- <span data-type=\"strong\">b</span>"
+    },
+    "orderedBoldAll": {
+      "loaded": "<ol>\n<li>a</li>\n<li>b</li>\n</ol>\n",
+      "html": "<ol><li><b>a</b></li><li><b>b</b></li></ol>",
+      "value": "1. <span data-type=\"strong\">a</span>\n2. <span data-type=\"strong\">b</span>"
+    },
+    "softBreakReedit": {
+      "loaded": "<p>one<br>\ntwo</p>\n",
+      "html": "<p>one<br>twox</p>",
+      "value": "one\ntwox"
+    },
+    "paragraphReedit": {
+      "loaded": "<p>para1</p>\n<p>para2</p>\n",
+      "html": "<p>para1</p><p>para2x</p>",
+      "value": "para1\n\npara2x"
+    },
+    "paragraphBoldAll": {
+      "html": "<p><b>para1</b></p><p><b>para2</b></p>",
+      "value": "<span data-type=\"strong\">para1</span>\n\n<span data-type=\"strong\">para2</span>"
+    },
+    "literals": {
+      "lit ~~strike~~": "\\~\\~strike\\~\\~",
+      "lit ==mark==": "\\=\\=mark\\=\\=",
+      "lit ---": "\\---",
+      "lit ===": "\\=\\=\\=",
+      "lit a ~sub~ b": "a \\~sub\\~ b",
+      "lit x ^sup^ y": "x \\^sup\\^ y",
+      "lit $5 and $6": "\\$5 and \\$6",
+      "lit ~~~": "\\~\\~\\~",
+      "lit $$": "\\$\\$",
+      "lit a=b": "a=b",
+      "lit 1+1==2": "1+1\\=\\=2"
+    },
+    "regression": {
+      "reload > quote line\n> second": {
+        "loaded": "<blockquote>\n<p>quote line<br>\nsecond</p>\n</blockquote>\n",
+        "html": "<blockquote><p>quote line<br>second</p></blockquote>",
+        "value": "> quote line\n> second"
+      },
+      "dirty > quote line\n> second": "> quote line\n> second",
+      "reload - a\n\n  more\n- b": {
+        "loaded": "<ul>\n<li>\n<p>a</p>\n<p>more</p>\n</li>\n<li>\n<p>b</p>\n</li>\n</ul>\n",
+        "html": "<ul><li><p>a</p><p>more</p></li><li><p>b</p></li></ul>",
+        "value": "- a\n  \n  more\n- b"
+      },
+      "dirty - a\n\n  more\n- b": "- a\n  \n  more\n- b",
+      "reload one **bold** ~~s~~ two\n\n1. x\n2. y\n\ntail": {
+        "loaded": "<p>one <span data-type=\"strong\">bold</span> <span data-type=\"s\">s</span> two</p>\n<ol>\n<li>x</li>\n<li>y</li>\n</ol>\n<p>tail</p>\n",
+        "html": "<p>one <b>bold</b> <s>s</s> two</p><ol><li>x</li><li>y</li></ol><p>tail</p>",
+        "value": "one <span data-type=\"strong\">bold</span> <span data-type=\"s\">s</span> two\n\n\n\n1. x\n2. y\n\ntail"
+      },
+      "dirty one **bold** ~~s~~ two\n\n1. x\n2. y\n\ntail": "one <span data-type=\"strong\">bold</span> <span data-type=\"s\">s</span> two\n\n\n\n1. x\n2. y\n\ntail",
+      "reload ```js\nconst a=1;\n\nb()\n```": {
+        "loaded": "<pre><code class=\"language-js\">const a=1;\n\nb()\n</code></pre>\n",
+        "html": "<pre><code class=\"language-js\">const a=1;\n\nb()\n</code></pre>",
+        "value": "```js\nconst a=1;\n\nb()\n```"
+      },
+      "dirty ```js\nconst a=1;\n\nb()\n```": "```js\nconst a=1;\n\nb()\n```",
+      "reload a\n\n<audio controls=\"controls\" src=\"assets/x.wav\"></audio>\n{: custom-qingmo-transcribe=\"pending\"}\n\nafter": {
+        "loaded": "<p>a</p>\n<audio controls=\"\" src=\"assets/x.wav\" preload=\"none\"></audio>\n<p>after</p>\n",
+        "html": "<p>a</p><p></p><div data-qm-audio=\"assets/x.wav\" data-qm-native=\"%3Caudio%20controls%3D%22controls%22%20src%3D%22assets%2Fx.wav%22%3E%3C%2Faudio%3E%0A%7B%3A%20id%3D%2220261016003555-6iy07u9%22%20updated%3D%2220261016003555%22%20custom-qingmo-transcribe%3D%22pending%22%7D\" data-qm-key=\"abac00b4-1ca2-4234-ad75-57c8651234d0\" contenteditable=\"false\"></div><p></p><p>after</p>",
+        "value": "a\n\n\n\n\n\n<audio controls=\"controls\" src=\"assets/x.wav\"></audio>\n{: id=\"20261016003555-6iy07u9\" updated=\"20261016003555\" custom-qingmo-transcribe=\"pending\"}\n\n\n\nafter"
+      },
+      "dirty a\n\n<audio controls=\"controls\" src=\"assets/x.wav\"></audio>\n{: custom-qingmo-transcribe=\"pending\"}\n\nafter": "a\n\n\n\n\n\n<audio controls=\"controls\" src=\"assets/x.wav\"></audio>\n{: id=\"20261016003555-6iy07u9\" updated=\"20261016003555\" custom-qingmo-transcribe=\"pending\"}\n\n\n\nafter",
+      "draft one\ntwo": {
+        "html": "<p>one<br>two</p>",
+        "value": "one\ntwo"
+      },
+      "draft p1\n\np2": {
+        "html": "<p>p1</p><p>p2</p>",
+        "value": "p1\n\np2"
+      },
+      "draft \\~\\~s\\~\\~ \\$5": {
+        "html": "<p>~~s~~ $5</p>",
+        "value": "\\~\\~s\\~\\~ \\$5"
+      }
+    }
+  },
+  "composerSubmit": {
+    "first": "first\n\nsecond \\~\\~x\\~\\~ \\$5",
+    "list": "- a\n- b",
+    "errors": []
+  },
+  "kernelRoundTrip": [
+    {
+      "name": "first\n\nsecond",
+      "markdown": "first\n\nsecond\n",
+      "types": [
+        "NodeParagraph"
+      ]
+    },
+    {
+      "name": "one\ntwox",
+      "markdown": "one\ntwox\n",
+      "types": [
+        "NodeParagraph"
+      ]
+    },
+    {
+      "name": "\\~\\~strike\\~\\~",
+      "markdown": "\\~\\~strike\\~\\~\n",
+      "types": [
+        "NodeParagraph",
+        "backslash"
+      ]
+    },
+    {
+      "name": "\\=\\=mark\\=\\=",
+      "markdown": "\\=\\=mark\\=\\=\n",
+      "types": [
+        "NodeParagraph",
+        "backslash"
+      ]
+    },
+    {
+      "name": "\\---",
+      "markdown": "\\---\n",
+      "types": [
+        "NodeParagraph",
+        "backslash"
+      ]
+    },
+    {
+      "name": "a \\~sub\\~ b",
+      "markdown": "a \\~sub\\~ b\n",
+      "types": [
+        "NodeParagraph",
+        "backslash"
+      ]
+    },
+    {
+      "name": "x \\^sup\\^ y",
+      "markdown": "x \\^sup\\^ y\n",
+      "types": [
+        "NodeParagraph",
+        "backslash"
+      ]
+    },
+    {
+      "name": "\\$5 and \\$6",
+      "markdown": "\\$5 and \\$6\n",
+      "types": [
+        "NodeParagraph",
+        "backslash"
+      ]
+    },
+    {
+      "name": "\\~\\~\\~",
+      "markdown": "\\~\\~\\~\n",
+      "types": [
+        "NodeParagraph",
+        "backslash"
+      ]
+    },
+    {
+      "name": "1+1\\=\\=2",
+      "markdown": "1+1\\=\\=2\n",
+      "types": [
+        "NodeParagraph",
+        "backslash"
+      ]
+    },
+    {
+      "name": "\\-",
+      "markdown": "\\-\n",
+      "types": [
+        "NodeParagraph",
+        "backslash"
+      ]
+    },
+    {
+      "name": "\\>",
+      "markdown": "\\>\n",
+      "types": [
+        "NodeParagraph",
+        "backslash"
+      ]
+    },
+    {
+      "name": "<span data-type=\"strong\">~~x~~ $5$ ==m==</span>",
+      "markdown": "**~~x~~**  ****​**$5$**  ****​**==m==**\n",
+      "types": [
+        "NodeParagraph",
+        "strong s",
+        "strong",
+        "strong inline-math",
+        "strong mark"
+      ]
+    },
+    {
+      "name": "list-bold-update",
+      "markdown": "- **a**\n- **b**\n",
+      "types": [
+        "NodeList",
+        "NodeListItem",
+        "NodeParagraph",
+        "strong"
+      ]
+    },
+    {
+      "name": "soft-initial",
+      "markdown": "one\ntwo\n",
+      "types": [
+        "NodeParagraph"
+      ]
+    },
+    {
+      "name": "soft-update",
+      "markdown": "one\ntwox\n",
+      "types": [
+        "NodeParagraph"
+      ]
+    }
+  ],
+  "cardRenderAndReedit": [
+    {
+      "text": "<span data-type=\"strong\">\\~\\~x\\~\\~ \\$5\\$</span>",
+      "card": "<p><span data-type=\"strong\"><del>x</del></span> <span data-type=\"strong\">$5$</span></p>\n",
+      "reedit": "<span data-type=\"strong s\">x</span> <span data-type=\"strong\">\\$5\\$</span>",
+      "again": "**~~x~~**  **$5$**\n"
+    },
+    {
+      "text": "\\~\\~strike\\~\\~ \\=\\=m\\=\\= \\$5 and \\$6\n\n\\---",
+      "card": "<p>~~strike~~ ==m== $5 and $6</p>\n<p>---</p>\n",
+      "reedit": "\\~\\~strike\\~\\~ \\=\\=m\\=\\= \\$5 and \\$6\n\n\\---",
+      "again": "\\~\\~strike\\~\\~ \\=\\=m\\=\\= \\$5 and \\$6\n\n\\---\n"
+    }
+  ]
+}
