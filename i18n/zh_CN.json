@@ -211,6 +211,7 @@
   "modifyCredential": "修改",
   "clearCredential": "清空",
   "testCredentials": "短音频测试",
+  "transcriptionInfo": "转写费用与密钥说明",
   "credentialsReady": "语音识别请求成功",
   "credentialTestCost": "测试会调用一次语音识别，可能计费。",
   "credentialSecurity": "建议使用只授予语音识别权限的 CAM 子账号，并在腾讯云设置费用告警。",

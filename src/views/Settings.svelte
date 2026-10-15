@@ -8,7 +8,8 @@
  const {options,shared}=getContext(CONTEXT),{repository,t}=options;
  let {first=false,review=false,onclose,onnotify,onsaved}= $props();
  const uid=$props.id();
- let tab=$state('general');
+ let tab=$state('general'),infoOpen=$state(false),infoRoot=$state();
+ function dismissInfo(event){if(event.key==='Escape'&&infoOpen){event.preventDefault();event.stopPropagation();infoOpen=false;}}
  let editing=$state({}),testing=$state(false),testResult=$state(''),testController;
  let books=$state([]),saving=$state(false),draft=$state({}),initial=$state({});
  onMount(()=>{initial=review?{reviewCount:shared.settings.reviewCount||DEFAULT_SETTINGS.reviewCount}:{notebook:shared.settings.notebook||'',pathTemplate:shared.settings.pathTemplate||DEFAULT_SETTINGS.pathTemplate,openOnStartup:!!shared.settings.openOnStartup,floatingButton:!!shared.settings.floatingButton,tencentSecretId:shared.settings.tencentSecretId||'',tencentSecretKey:shared.settings.tencentSecretKey||''};draft={...initial};let live=true;if(!review)repository.getNotebooks().then(value=>{if(live)books=value;}).catch(()=>{if(live)onnotify('notebooksFailed');});return ()=>{live=false;testController?.abort();};});
@@ -51,8 +52,14 @@ async function test(){testing=true;testResult='';testController=new AbortControl
      <div class="qm-credential-value">{#if initial[key]&&!editing[key]}<span>{'••••••••'+initial[key].slice(-4)}</span><Button label={t('modifyCredential')} onclick={()=>{editing[key]=true;draft[key]='';testResult='';}}/>{:else}<input aria-label={key==='tencentSecretId'?'SecretId':'SecretKey'} type={key==='tencentSecretKey'?'password':'text'} autocomplete="off" bind:value={draft[key]}/>{/if}<Button label={t('clearCredential')} onclick={()=>{editing[key]=true;draft[key]='';testResult='';}}/></div>
     </div>{/each}
     </div>
-    <div class="qm-credential-test"><Button class="qm-test-credentials" label={t('testCredentials')} disabled={testing||!draft.tencentSecretId||!draft.tencentSecretKey} onclick={test}/><p role="status" class:qm-credential-ok={testResult==='credentialsReady'}>{testResult?t(testResult):''}</p></div>
-    <p class="qm-setting-note">{t('credentialTestCost')}</p><p class="qm-setting-note">{t('credentialSecurity')}</p><p class="qm-setting-note">{t('credentialBilling')}</p><p class="qm-setting-note">{t('credentialSync')}</p>
+    <div class="qm-credential-test">
+     <Button class="qm-test-credentials" label={t('testCredentials')} disabled={testing||!draft.tencentSecretId||!draft.tencentSecretKey} onclick={test}/>
+     <div bind:this={infoRoot} class="qm-credential-help" role="group" aria-label={t('transcriptionInfo')} onpointerenter={()=>infoOpen=true} onpointerleave={()=>{if(!infoRoot.contains(infoRoot.ownerDocument.activeElement))infoOpen=false;}}>
+      <Button class="qm-info-button" label={t('transcriptionInfo')} title="" icon="info" aria-expanded={infoOpen} aria-controls={uid+'-info'} aria-describedby={infoOpen?uid+'-info':undefined} onfocus={()=>infoOpen=true} onblur={()=>infoOpen=false} onclick={()=>infoOpen=true} onkeydown={dismissInfo}/>
+      <div id={uid+'-info'} role="tooltip" class="qm-credential-info" hidden={!infoOpen}>{#each ['credentialTestCost','credentialSecurity','credentialBilling','credentialSync'] as key}<p>{t(key)}</p>{/each}</div>
+     </div>
+     <p role="status" class:qm-credential-ok={testResult==='credentialsReady'}>{testResult?t(testResult):''}</p>
+    </div>
    </div>
   {/if}
   </div>
@@ -94,8 +101,15 @@ async function test(){testing=true;testResult='';testController=new AbortControl
  .qm-settings .qm-credential-value input{flex:1;min-width:0;width:auto;margin:0;background:transparent}
  .qm-credential-value>span{flex:1;min-width:0;overflow-wrap:anywhere;color:var(--qm-text-secondary)}
  .qm-credential :global(button){color:var(--qm-link);min-height:44px;padding:0 8px}
- .qm-credential-test{display:flex;align-items:center;gap:12px;margin:20px 0 8px;flex-wrap:wrap}
+ .qm-credential-test{position:relative;display:flex;align-items:center;gap:12px;margin:20px 0 8px;flex-wrap:wrap}
  .qm-credential-test :global(.qm-test-credentials){min-height:44px;border-radius:8px;background:var(--qm-brand-tint);color:var(--qm-brand);padding:0 16px;flex-shrink:0}
+ .qm-credential-help{display:flex;align-items:center}
+ .qm-credential-help :global(.qm-info-button){width:44px;height:44px;padding:0;color:var(--qm-text-secondary)}
+ .qm-credential-help :global(svg){width:18px;height:18px}
+ .qm-credential-info{position:absolute;top:100%;left:0;z-index:2;width:min(360px,100%);max-height:240px;overflow:auto;padding:12px 16px;border:1px solid var(--qm-border-strong);border-radius:10px;background:var(--qm-surface);box-shadow:0 4px 16px var(--qm-fill)}
+ .qm-credential-info[hidden]{display:none}
+ .qm-credential-test .qm-credential-info p{margin:0 0 8px;font-size:12px;line-height:20px;color:var(--qm-text-secondary)}
+ .qm-credential-test .qm-credential-info p:last-child{margin-bottom:0}
  .qm-credential-test p{font-size:13px;color:var(--qm-danger)}
  .qm-credential-test p.qm-credential-ok{color:var(--qm-brand)}
  .qm-setting-note{font-size:12px;line-height:20px;margin:10px 16px;color:var(--qm-text-secondary)}
