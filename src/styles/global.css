@@ -19,6 +19,7 @@
     --qm-heat-3: #20c59c;
     --qm-heat-4: #158468;
     --qm-danger: #d93636;
+    --qm-overlay: rgba(0, 0, 0, 0.5);
     --qm-scrim-blur: rgba(255, 255, 255, 0.6);
     --qm-keyboard: 0px;
     font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Noto Sans SC', sans-serif;

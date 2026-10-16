@@ -190,11 +190,14 @@
                 >{/each}
         </div>{/if}
     <div class="qm-images">
-        {#each (memo.images || parsed.images).filter(p => safeURL(p, true)) as path}<Button
+        {#each (memo.images || parsed.images).filter(p => safeURL(p, true)) as path, index}<Button
                 label={t('viewImage')}
                 class="qm-image-button"
-                onclick={() => onimage(safeURL(path, true))}
-                ><img src={safeURL(path, true)} alt={t('attachedImage')} loading="lazy" /></Button
+                onclick={() =>
+                    onimage(
+                        (memo.images || parsed.images).filter(p => safeURL(p, true)),
+                        index
+                    )}><img src={safeURL(path, true)} alt={t('attachedImage')} loading="lazy" /></Button
             >{/each}
     </div>
     {#if referenceCount > 0}<Button

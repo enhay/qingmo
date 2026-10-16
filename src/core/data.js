@@ -16,6 +16,11 @@ const COLLECT_TOKEN = '#' + COLLECT_TAG + '#';
 const literal = value => "'" + String(value).replace(/'/g, "''") + "'";
 const localDay = date =>
     `${date.getFullYear()}${String(date.getMonth() + 1).padStart(2, '0')}${String(date.getDate()).padStart(2, '0')}`;
+function lastYearToday(date = new Date()) {
+    const year = date.getFullYear() - 1,
+        month = date.getMonth();
+    return localDay(new Date(year, month, Math.min(date.getDate(), new Date(year, month + 1, 0).getDate())));
+}
 const validImage = value => typeof value === 'string' && /^assets\//.test(value) && !/[\r\n<>]/.test(value);
 const unique = values => [...new Set(values)];
 
@@ -720,6 +725,7 @@ function stableReviewIds(ids, scope, storage, date = new Date()) {
     return order;
 }
 export {
+    lastYearToday,
     COLLECT_TAG,
     normalizeScope,
     stableReviewIds,

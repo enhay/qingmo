@@ -278,5 +278,8 @@
   "draftLabel": "草稿",
   "insightEntry": "洞察",
   "referenceCandidates": "引用候选",
-  "referencedCount": "被引用 {count} 次"
+  "referencedCount": "被引用 {count} 次",
+  "lastYearToday": "去年今日",
+  "previousImage": "上一张",
+  "nextImage": "下一张"
 }

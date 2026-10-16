@@ -2,7 +2,7 @@
     import { setContext, onMount, tick, untrack } from 'svelte';
     import { CONTEXT, displayDay } from './context.js';
     import { audioErrorCode } from '../core/transcription.js';
-    import { parseMemoMarkdown, COLLECT_TAG } from '../core/data.js';
+    import { parseMemoMarkdown, COLLECT_TAG, lastYearToday } from '../core/data.js';
     import Sidebar from './Sidebar.svelte';
     import Composer from './Composer.svelte';
     import Review from './Review.svelte';
@@ -13,6 +13,8 @@
     import Button from '../components/Button.svelte';
     import Icon from '../components/Icon.svelte';
     import Dialog from '../components/Dialog.svelte';
+    import GalleryCard from '../components/GalleryCard.svelte';
+    import { safeURL } from './context.js';
     import MemoCard from '../components/MemoCard.svelte';
     let { options: suppliedOptions } = $props();
     const options = untrack(() => suppliedOptions);
@@ -214,8 +216,19 @@
             deleting = false;
         }
     }
-    function image(url) {
-        setModal({ type: 'image', label: 'viewImage', url });
+    function image(paths, index = 0) {
+        const images = (Array.isArray(paths) ? paths : [paths]).filter(path => safeURL(path, true));
+        if (images.length)
+            setModal({
+                type: 'image',
+                label: 'viewImage',
+                images,
+                index: Math.max(0, Math.min(index, images.length - 1))
+            });
+    }
+    function imageStep(direction) {
+        if (modal?.type === 'image')
+            modal.index = Math.max(0, Math.min(modal.index + direction, modal.images.length - 1));
     }
     function openInsight(viewId = 'default', memoId = '', initialScope = aiScope) {
         composer?.flushDraft();
@@ -333,8 +346,23 @@
     function keyboard(e) {
         if (e.defaultPrevented) return;
         if (!root.contains(doc.activeElement) || e.isComposing) return;
+        if ((e.ctrlKey || e.metaKey) && !e.altKey && e.key.toLowerCase() === 'k' && !modal) {
+            e.preventDefault();
+            e.stopPropagation();
+            closeReview();
+            searchOpen = true;
+            tick().then(() => search?.focus());
+            return;
+        }
+        if (modal?.type === 'image' && ['ArrowLeft', 'ArrowRight'].includes(e.key)) {
+            e.preventDefault();
+            e.stopPropagation();
+            imageStep(e.key === 'ArrowLeft' ? -1 : 1);
+            return;
+        }
         if (e.key === 'Escape') {
             e.preventDefault();
+            e.stopPropagation();
             if (!handleBack()) {
                 composer?.flushDraft();
                 onClose?.();
@@ -433,7 +461,8 @@
     ontouchend={e => {
         const dy = e.changedTouches[0].clientY - touchY,
             dx = e.changedTouches[0].clientX - touchX;
-        if (sideOpen && dx < -60) toggleSidebar(false);
+        if (modal?.type === 'image' && Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy)) imageStep(dx < 0 ? 1 : -1);
+        else if (sideOpen && dx < -60) toggleSidebar(false);
         else if (composeOpen && dy > 80 && e.target.closest('.qm-handle')) composer.closeCompose();
         else if (!composeOpen && !reviewMode && stream.scrollTop === 0 && dy > 80) refresh();
     }}
@@ -547,6 +576,7 @@
         <div
             bind:this={stream}
             class="qm-stream"
+            class:qm-gallery={filter.kind === 'image'}
             role="region"
             aria-label={t('memoList')}
             aria-busy={loading}
@@ -554,24 +584,29 @@
                 if (hasMore && stream.scrollHeight - stream.scrollTop - stream.clientHeight < 160) load(false);
             }}
         >
-            {#each items as memo (memo.id)}<MemoCard
-                    {memo}
-                    {t}
-                    {renderMarkdown}
-                    {renderBlockDOM}
-                    {openBlock}
-                    {choose}
-                    {previewReference}
-                    showBacklinks={(id, event) => (options.nativeMobile ? openBlock(id) : showBacklinks(id, event))}
-                    referenceCount={referenceCounts[memo.id] || 0}
-                    draft={!!shared.drafts[memo.id]}
-                    collapseLongMemos={shared.settings.collapseLongMemos}
-                    desktop={layout === 'desktop'}
-                    onedit={memo => (memo.type === 'p' || memo.type === 's' ? compose(memo) : openBlock(memo.id))}
-                    oninsight={memo => openInsight('default', memo.id)}
-                    onmenu={memoMenu}
-                    onimage={image}
-                />{/each}{#if !items.length && !loading}<div class="qm-empty">
+            {#each items as memo (memo.id)}{#if filter.kind === 'image'}<GalleryCard
+                        {memo}
+                        {t}
+                        onmenu={memoMenu}
+                        onimage={image}
+                    />{:else}<MemoCard
+                        {memo}
+                        {t}
+                        {renderMarkdown}
+                        {renderBlockDOM}
+                        {openBlock}
+                        {choose}
+                        {previewReference}
+                        showBacklinks={(id, event) => (options.nativeMobile ? openBlock(id) : showBacklinks(id, event))}
+                        referenceCount={referenceCounts[memo.id] || 0}
+                        draft={!!shared.drafts[memo.id]}
+                        collapseLongMemos={shared.settings.collapseLongMemos}
+                        desktop={layout === 'desktop'}
+                        onedit={memo => (memo.type === 'p' || memo.type === 's' ? compose(memo) : openBlock(memo.id))}
+                        oninsight={memo => openInsight('default', memo.id)}
+                        onmenu={memoMenu}
+                        onimage={image}
+                    />{/if}{/each}{#if !items.length && !loading}<div class="qm-empty">
                     {t(selectedFilters.length ? 'noResults' : 'empty')}
                 </div>{/if}
         </div>
@@ -703,7 +738,20 @@
                         onstate={state => (historyState = state)}
                         onselected={value => (historySelected = value)}
                     />
-                {:else if modal.type === 'image'}<img src={modal.url} alt={t('attachedImage')} />
+                {:else if modal.type === 'image'}<div class="qm-image-position">
+                        {modal.index + 1} / {modal.images.length}
+                    </div>
+                    <img src={safeURL(modal.images[modal.index], true)} alt={t('attachedImage')} />
+                    {#if modal.index > 0}<Button
+                            label={t('previousImage')}
+                            class="qm-image-previous"
+                            onclick={() => imageStep(-1)}
+                        />{/if}
+                    {#if modal.index < modal.images.length - 1}<Button
+                            label={t('nextImage')}
+                            class="qm-image-next"
+                            onclick={() => imageStep(1)}
+                        />{/if}
                 {:else if modal.type === 'selection'}<Button
                         label={t('copySelection')}
                         class="qm-dialog-action"
@@ -838,7 +886,15 @@
                         />
                     </div>
                 {:else if modal.type === 'list'}
-                    {#if modal.section === 'main'}{#each [['sortOrder', 'sort', t(listOrder === 'newest' ? 'sortNewest' : 'sortOldest'), 'sort'], ['noteSource', 'filter', t(filter.source === 'all' ? 'sourceAll' : filter.source === 'native' ? 'sourceNative' : 'sourceExternal'), 'source']] as [key, icon, value, next]}<Button
+                    {#if modal.section === 'main'}<Button
+                            label={t('lastYearToday')}
+                            icon="calendar"
+                            class="qm-dialog-action"
+                            onclick={() => {
+                                closeDialog();
+                                choose({ day: lastYearToday() });
+                            }}><span>{t('lastYearToday')}</span></Button
+                        >{#each [['sortOrder', 'sort', t(listOrder === 'newest' ? 'sortNewest' : 'sortOldest'), 'sort'], ['noteSource', 'filter', t(filter.source === 'all' ? 'sourceAll' : filter.source === 'native' ? 'sourceNative' : 'sourceExternal'), 'source']] as [key, icon, value, next]}<Button
                                 label={t(key)}
                                 {icon}
                                 class="qm-dialog-action"
@@ -869,3 +925,39 @@
                 {/if}
             </Dialog>{/key}{/if}
 </div>
+
+<style>
+    .qm-stream.qm-gallery {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px;
+        align-content: start;
+    }
+    :global(.qm-root[data-layout='desktop']) .qm-gallery {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 16px;
+    }
+    .qm-image-position {
+        color: var(--qm-on-brand);
+        text-align: center;
+        font-size: 13px;
+    }
+    :global(.qm-image-previous),
+    :global(.qm-image-next) {
+        position: absolute;
+        top: 50%;
+        color: var(--qm-on-brand);
+        background: var(--qm-overlay);
+        border-radius: 50%;
+    }
+    :global(.qm-image-previous) {
+        left: 12px;
+    }
+    :global(.qm-image-next) {
+        right: 12px;
+    }
+    :global(.qm-root[data-layout='mobile'] .qm-image-previous),
+    :global(.qm-root[data-layout='mobile'] .qm-image-next) {
+        display: none;
+    }
+</style>
