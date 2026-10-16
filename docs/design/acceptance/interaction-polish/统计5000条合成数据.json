@@ -1,0 +1,84 @@
+{
+  "root": "20261016111547-z2b7jpc",
+  "fixtures": [
+    {
+      "day": "20321001",
+      "text": "甲　乙 😀 #标签#\n\n前文 ![图片说明](assets/sample-20261011164922-15mycnq.png \"图题\") 后文\n\n- 第一\n- 第二\n\n|甲|乙|\n|---|---|\n|丙|丁|\n\n```js\nconst x = 1\n```",
+      "words": 25
+    },
+    {
+      "day": "20321001",
+      "text": "((20261014183511-igeoe4v '合成来源'))\n\n丙",
+      "words": 5
+    },
+    {
+      "day": "20321003",
+      "text": "丁\n\n<audio controls=\"controls\" src=\"assets/synthetic.wav\"></audio>",
+      "words": 1
+    },
+    {
+      "day": "20321101",
+      "text": "戊",
+      "words": 1
+    }
+  ],
+  "month": {
+    "year": 2032,
+    "month": 10,
+    "memoCount": 3,
+    "wordCount": 31,
+    "recordDays": 2,
+    "maxCount": 2,
+    "maxWords": 30,
+    "buckets": [
+      {
+        "date": "20321001",
+        "count": 2,
+        "words": 30
+      },
+      {
+        "date": "20321003",
+        "count": 1,
+        "words": 1
+      }
+    ]
+  },
+  "year": {
+    "year": 2032,
+    "month": null,
+    "memoCount": 5000,
+    "wordCount": 25012,
+    "recordDays": 4,
+    "maxCount": 4996,
+    "maxWords": 24980,
+    "buckets": [
+      {
+        "date": "203210",
+        "count": 3,
+        "words": 31
+      },
+      {
+        "date": "203211",
+        "count": 1,
+        "words": 1
+      },
+      {
+        "date": "203212",
+        "count": 4996,
+        "words": 24980
+      }
+    ]
+  },
+  "durations": [
+    39.54987500000004,
+    38.060292000000004,
+    37.67399999999998,
+    36.40712499999995
+  ],
+  "yearDurations": [
+    40.35633300000006,
+    40.765625,
+    41.57666700000004,
+    40.20316700000001
+  ]
+}

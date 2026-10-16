@@ -1,0 +1,59 @@
+{
+  "passed": true,
+  "annualRequestMs": 56.307041999999996,
+  "year": {
+    "year": 2032,
+    "month": null,
+    "memoCount": 5000,
+    "wordCount": 25012,
+    "recordDays": 4,
+    "maxCount": 4996,
+    "maxWords": 24980,
+    "buckets": [
+      {
+        "date": "203210",
+        "count": 3,
+        "words": 31
+      },
+      {
+        "date": "203211",
+        "count": 1,
+        "words": 1
+      },
+      {
+        "date": "203212",
+        "count": 4996,
+        "words": 24980
+      }
+    ]
+  },
+  "month": {
+    "year": 2032,
+    "month": 10,
+    "memoCount": 3,
+    "wordCount": 31,
+    "recordDays": 2,
+    "maxCount": 2,
+    "maxWords": 30,
+    "buckets": [
+      {
+        "date": "20321001",
+        "count": 2,
+        "words": 30
+      },
+      {
+        "date": "20321003",
+        "count": 1,
+        "words": 1
+      }
+    ]
+  },
+  "checks": [
+    "native 5000 memo annual aggregation",
+    "daily monthly buckets and maxima",
+    "empty month",
+    "leap anniversary",
+    "unicode whitespace and emoji count",
+    "relative history across midnight"
+  ]
+}

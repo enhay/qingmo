@@ -1,0 +1,16 @@
+{
+  "passed": true,
+  "host": "SiYuan 3.8.7 isolated 127.0.0.1:6817",
+  "source": "20261016112117-507zy90",
+  "memo": "20261016112117-81pop2x",
+  "checks": [
+    "native reference API readback",
+    "rich editor serialize and reload",
+    "history capture and restore preserves memo ID and reference",
+    "collection and search deduplication",
+    "pin ordering",
+    "draft save and clear",
+    "nested tag preservation"
+  ],
+  "modelRequests": 0
+}

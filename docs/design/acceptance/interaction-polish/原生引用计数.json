@@ -1,0 +1,26 @@
+{
+  "passed": true,
+  "root": "20261016112749-ii00mtz",
+  "target": "20261016120000-vlpbn8k",
+  "child": "20261016120000-ahjxmtq",
+  "whole": "20261016112749-ifmiae5",
+  "external": "20261016112749-5n93al3",
+  "deleted": "20261016120000-u7eme1h",
+  "counts": {
+    "20261016112749-ifmiae5": 1,
+    "20261016120000-ahjxmtq": 1,
+    "20261016120000-vlpbn8k": 1
+  },
+  "nativeCounts": {
+    "target": "1",
+    "child": "1"
+  },
+  "checks": [
+    "same external paragraph references root twice",
+    "child reference is not rolled up into root count",
+    "external document is not collected",
+    "whole document reference count",
+    "deleted target no longer returned",
+    "native getDoc refcount equals card repository count"
+  ]
+}
