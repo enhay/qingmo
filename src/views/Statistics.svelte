@@ -162,14 +162,13 @@
     .qm-stat-chart {
         overflow-x: auto;
         display: flex;
-        height: 220px;
         margin: 24px 8px;
         gap: 8px;
     }
     .qm-stat-bars {
         display: flex;
-        flex: 1;
-        min-width: 0;
+        flex: 1 0 max-content;
+        height: 220px;
         align-items: stretch;
         gap: 3px;
         padding-bottom: 20px;
@@ -179,11 +178,14 @@
         display: flex;
         align-items: flex-end;
         position: relative;
-        min-width: 0;
+        min-width: 44px;
         padding: 0;
         background: transparent;
         border: 0;
         color: var(--qm-text-secondary);
+    }
+    .qm-stat-bar:focus-visible {
+        outline-offset: -2px;
     }
     .qm-stat-bar i {
         display: block;
@@ -207,8 +209,5 @@
     }
     :global(.qm-root[data-layout='mobile']) .qm-stat-metrics div {
         flex-basis: 33%;
-    }
-    :global(.qm-root[data-layout='mobile']) .qm-stat-bar {
-        min-width: 44px;
     }
 </style>
