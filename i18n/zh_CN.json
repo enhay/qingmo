@@ -270,5 +270,7 @@
   "materialSent": "实际发送",
   "materialDates": "日期范围",
   "notesCount": "{count} 条",
-  "sentSummary": "{count} 条，约 {chars} 字"
+  "sentSummary": "{count} 条，约 {chars} 字",
+  "imagesOnly": "只支持图片",
+  "referenceSearchFailed": "引用搜索失败"
 }

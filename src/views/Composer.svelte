@@ -31,6 +31,11 @@
         tagName = '',
         dismissedTag = null,
         timer;
+    let references = $state([]),
+        referenceIndex = $state(-1),
+        referenceTimer,
+        referenceRequest = 0,
+        dismissedReference = null;
     let storage;
     try {
         storage = options.container.ownerDocument.defaultView.localStorage;
@@ -468,6 +473,12 @@
     async function upload(e) {
         const files = [...e.currentTarget.files];
         e.currentTarget.value = '';
+        await uploadFiles(files);
+    }
+    async function uploadFiles(input) {
+        if (busy || uploading) return;
+        const files = input.filter(file => file.type.startsWith('image/'));
+        if (files.length !== input.length) onnotify('imagesOnly');
         if (!files.length) return;
         uploading = true;
         onnotify('uploading');
@@ -491,6 +502,29 @@
         }
     }
     async function tagCandidates() {
+        clearTimeout(referenceTimer);
+        const request = ++referenceRequest;
+        const ref = editor.token('@');
+        if (ref && !editor.composing) {
+            tagOptions = [];
+            if (dismissedReference === ref.name) return;
+            dismissedReference = null;
+            references = [];
+            referenceIndex = -1;
+            referenceTimer = setTimeout(async () => {
+                try {
+                    const items = await repository.referenceCandidates(ref.name, draftId === 'new' ? '' : draftId);
+                    if (dead || request !== referenceRequest || editor.token('@')?.name !== ref.name) return;
+                    references = items;
+                    await positionCandidates(ref);
+                } catch {
+                    if (!dead && request === referenceRequest) onnotify('referenceSearchFailed');
+                }
+            }, 180);
+            return;
+        }
+        references = [];
+        dismissedReference = null;
         editor.highlightToken();
         const token = editor.token();
         if (!token) {
@@ -512,8 +546,11 @@
             .slice(0, 6);
         if (token.name && !(stats.tags || []).some(x => x.name.toLocaleLowerCase() === token.name.toLocaleLowerCase()))
             tagOptions.push({ name: token.name, create: true });
+        await positionCandidates(token);
+    }
+    async function positionCandidates(token) {
         await tick();
-        if (!candidates || !tagOptions.length) return;
+        if (!candidates || (!tagOptions.length && !references.length)) return;
         const caret = token.range.getBoundingClientRect(),
             box = sheet.getBoundingClientRect();
         candidateLeft = Math.max(8, Math.min(caret.left - box.left, box.width - candidates.offsetWidth - 8));
@@ -531,6 +568,37 @@
     }
     function keydown(e) {
         if (e.isComposing || editor.composing || e.keyCode === 229) return;
+        const format =
+            (e.ctrlKey || e.metaKey) &&
+            !e.altKey &&
+            { b: !e.shiftKey && 'bold', u: !e.shiftKey && 'underline', h: e.shiftKey && 'highlight' }[
+                e.key.toLowerCase()
+            ];
+        if (format) {
+            e.preventDefault();
+            e.stopPropagation();
+            editor.command(format);
+            return;
+        }
+        if (editor.token('@')) {
+            if (e.key === 'Escape') {
+                e.preventDefault();
+                e.stopPropagation();
+                dismissedReference = editor.token('@').name;
+                references = [];
+                ++referenceRequest;
+                return;
+            }
+            if (references.length && ['ArrowDown', 'ArrowUp', 'Enter'].includes(e.key)) {
+                e.preventDefault();
+                e.stopPropagation();
+                if (e.key === 'Enter') completeReference(references[Math.max(0, referenceIndex)]);
+                else
+                    referenceIndex =
+                        (referenceIndex + (e.key === 'ArrowDown' ? 1 : -1) + references.length) % references.length;
+                return;
+            }
+        }
         if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
             e.preventDefault();
             submit();
@@ -566,6 +634,11 @@
             );
         }
     }
+    function completeReference(item) {
+        editor.completeReference(item.id, item.label);
+        references = [];
+        ++referenceRequest;
+    }
     function ready(api, node) {
         editor = api;
         element = node;
@@ -590,6 +663,8 @@
             stopRequests();
             dead = true;
             clearTimeout(timer);
+            clearTimeout(referenceTimer);
+            ++referenceRequest;
             doc.removeEventListener('pointerdown', dismissFormat, true);
             doc.removeEventListener('keydown', formatKeys, true);
             doc.removeEventListener('visibilitychange', visibility);
@@ -612,6 +687,7 @@
         placeholder={t('inputPlaceholder')}
         disabled={busy}
         onready={ready}
+        onfiles={uploadFiles}
         onchange={api => {
             value = api.value();
             queueDraft();
@@ -682,6 +758,15 @@
         style:left={candidateLeft + 'px'}
         style:top={candidateTop + 'px'}
     >
+        {#each references as item, i}<button
+                type="button"
+                class="qm-reference-option"
+                role="option"
+                aria-selected={referenceIndex === i}
+                onmousedown={e => e.preventDefault()}
+                onclick={() => completeReference(item)}
+                ><span>{item.label}</span><small>{item.local ? item.created?.slice(0, 8) : item.path}</small></button
+            >{/each}
         {#each tagOptions as tag, i}<button
                 type="button"
                 class="qm-tag-option"
@@ -792,6 +877,31 @@
 </section>
 
 <style>
+    .qm-reference-option {
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+        padding: 8px 12px;
+        text-align: left;
+        border: 0;
+        background: var(--qm-surface);
+        color: var(--qm-text);
+    }
+    .qm-reference-option[aria-selected='true'] {
+        background: var(--qm-fill);
+    }
+    .qm-reference-option span {
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        font-size: 14px;
+    }
+    .qm-reference-option small {
+        color: var(--qm-text-secondary);
+        font-size: 12px;
+    }
+
     .qm-format-control {
         position: relative;
         flex-shrink: 0;

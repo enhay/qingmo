@@ -11,7 +11,8 @@
         onkeydown,
         onkeyup,
         onfocus,
-        onready
+        onready,
+        onfiles
     } = $props();
     let element, editor;
     onMount(() => {
@@ -19,6 +20,7 @@
             element,
             renderMarkdown,
             onChange: () => onchange?.(editor),
+            onFiles: files => onfiles?.(files),
             onSelection: () => onselection?.(editor)
         });
         onready(editor, element);

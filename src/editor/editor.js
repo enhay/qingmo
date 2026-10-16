@@ -61,7 +61,7 @@ function dropLayoutNewlines(root) {
             text.remove();
     }
 }
-function createEditor({ element, renderMarkdown, onChange, onSelection }) {
+function createEditor({ element, renderMarkdown, onChange, onSelection, onFiles }) {
     const doc = element.ownerDocument,
         win = doc.defaultView;
     let original = '',
@@ -484,7 +484,7 @@ function createEditor({ element, renderMarkdown, onChange, onSelection }) {
         }
         return doc.queryCommandState({ unordered: 'insertUnorderedList', ordered: 'insertOrderedList' }[name] || name);
     }
-    function token() {
+    function token(marker = '#') {
         const s = selection();
         if (
             !s ||
@@ -494,7 +494,7 @@ function createEditor({ element, renderMarkdown, onChange, onSelection }) {
         )
             return null;
         const before = s.anchorNode.nodeValue.slice(0, s.anchorOffset),
-            match = before.match(/(?:^|\s)#([^\s#]*)$/);
+            match = before.match(marker === '@' ? /(?:^|\s)@([^\s@]*)$/ : /(?:^|\s)#([^\s#]*)$/);
         if (!match) return null;
         const r = doc.createRange();
         r.setStart(s.anchorNode, s.anchorOffset - match[1].length - 1);
@@ -515,12 +515,21 @@ function createEditor({ element, renderMarkdown, onChange, onSelection }) {
     element.addEventListener('paste', event => {
         event.preventDefault();
         const data = event.clipboardData;
+        if (data.files.length) onFiles?.([...data.files]);
         insertHTML(
             data.getData('text/html')
                 ? sanitize(data.getData('text/html'))
                 : escapeHTML(data.getData('text/plain')).replace(/\n/g, '<br>')
         );
         decorate();
+    });
+    element.addEventListener('dragover', event => {
+        if (event.dataTransfer.types.includes('Files')) event.preventDefault();
+    });
+    element.addEventListener('drop', event => {
+        if (!event.dataTransfer.files.length) return;
+        event.preventDefault();
+        onFiles?.([...event.dataTransfer.files]);
     });
     // Markdown typed at the start of a line or around words becomes the matching format as you type.
     function blockOf(node) {
@@ -658,6 +667,14 @@ function createEditor({ element, renderMarkdown, onChange, onSelection }) {
             selected.removeAllRanges();
             selected.addRange(range);
             return Boolean(valid);
+        },
+        completeReference(id, label) {
+            const current = token('@');
+            if (!current) return false;
+            range = current.range;
+            select(range);
+            this.insertReference(id, label);
+            return true;
         },
         insertReference(id, label = '') {
             if (!blockId.test(id)) throw new Error('InvalidBlockId');

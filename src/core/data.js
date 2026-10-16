@@ -369,6 +369,45 @@ class MemoRepository {
         const items = await Promise.all(rows.slice(0, 20).map(row => this.hydrate(row)));
         return { items, hasMore: rows.length > 20 };
     }
+    async referenceCandidates(keyword = '', exclude = '') {
+        const [local, native] = await Promise.all([
+            this.list({ keyword, order: 'newest' }),
+            this.request('/api/search/searchRefBlock', { id: exclude, rootID: '', k: keyword, beforeLen: 0 })
+        ]);
+        const blocks = native.blocks || [];
+        const ownership = blocks.length
+            ? await this.sql(
+                  `${TREE} SELECT d.id,d.memo_id,m.created,(SELECT group_concat(c.content, char(10)) FROM descendants leaf JOIN blocks c ON c.id=leaf.id WHERE leaf.memo_id=d.memo_id AND NOT EXISTS (SELECT 1 FROM blocks child WHERE child.parent_id=c.id)) AS excerpt FROM descendants d JOIN memos m ON m.id=d.memo_id WHERE d.id IN (${blocks.map(b => literal(b.id)).join(',')})`
+              )
+            : [];
+        const owners = new Map(ownership.map(row => [row.id, row]));
+        const items = local.items
+            .filter(memo => memo.id !== exclude)
+            .slice(0, 5)
+            .map(memo => ({
+                id: memo.id,
+                label: parseMemoMarkdown(memo.markdown).text.slice(0, 60),
+                created: memo.created,
+                local: true
+            }));
+        const seen = new Set(items.map(item => item.id));
+        for (const block of blocks) {
+            const owner = owners.get(block.id);
+            const id = owner?.memo_id || block.id;
+            if (id === exclude || seen.has(id)) continue;
+            seen.add(id);
+            if (owner) {
+                items.push({ id, label: (owner.excerpt || '').slice(0, 60), created: owner.created, local: true });
+            } else
+                items.push({
+                    id,
+                    label: block.refText || block.content.replace(/<[^>]*>/g, ''),
+                    path: block.hPath,
+                    local: false
+                });
+        }
+        return [...items.filter(item => item.local).slice(0, 5), ...items.filter(item => !item.local)];
+    }
     async setPinned(id, pinned) {
         if (!(await this.get(id))) throw Object.assign(new Error('MEMO_NOT_FOUND'), { code: 'MEMO_NOT_FOUND' });
         await this.request('/api/attr/setBlockAttrs', { id, attrs: { 'custom-qingmo-pinned': pinned ? '1' : '' } });
