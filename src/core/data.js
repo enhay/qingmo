@@ -12,6 +12,13 @@ const DEFAULT_SETTINGS = {
 };
 // 收录开关标签：正文或文档标签精确等于它时收入轻墨（PRD 6.1）。
 const COLLECT_TAG = '轻墨';
+// ECMAScript whitespace used by countText; SQLite length counts Unicode code points.
+const TEXT_WHITESPACE = [
+    9, 10, 11, 12, 13, 32, 160, 5760, 8192, 8193, 8194, 8195, 8196, 8197, 8198, 8199, 8200, 8201, 8202, 8232, 8233,
+    8239, 8287, 12288, 65279
+];
+const textLengthSQL = expression =>
+    `length(${TEXT_WHITESPACE.reduce((sql, code) => `replace(${sql},char(${code}),'')`, expression)})`;
 const COLLECT_TOKEN = '#' + COLLECT_TAG + '#';
 const literal = value => "'" + String(value).replace(/'/g, "''") + "'";
 const localDay = date =>
@@ -237,8 +244,8 @@ const MEMOS = `all_tags AS (
 ), tagged_docs AS (
  SELECT DISTINCT b.id FROM blocks b JOIN all_tags t ON t.block_id=b.id WHERE b.type='d' AND t.name=${literal(COLLECT_TAG)}
 ), marked AS (
- SELECT b.id,b.created,b.type,b.root_id FROM blocks b WHERE b.type<>'d' AND EXISTS
- (SELECT 1 FROM attributes a WHERE a.block_id=b.id AND a.name='custom-qingmo-memo' AND a.value='1')
+ SELECT b.id,b.created,b.type,b.root_id FROM blocks b WHERE b.type<>'d' AND b.id IN
+ (SELECT a.block_id FROM attributes a WHERE a.name='custom-qingmo-memo' AND a.value='1')
 ), tag_candidates AS (
  SELECT DISTINCT CASE WHEN b.type='p' AND p.type IN ('i','b','s') THEN p.id ELSE b.id END AS id
  FROM spans sp JOIN blocks b ON b.id=sp.block_id LEFT JOIN blocks p ON p.id=b.parent_id
@@ -405,6 +412,7 @@ class MemoRepository {
             .map(memo => ({
                 id: memo.id,
                 label: parseMemoMarkdown(memo.markdown).text.slice(0, 60),
+                dom: memo.dom,
                 created: memo.created,
                 local: true
             }));
@@ -509,6 +517,46 @@ class MemoRepository {
                 attrs: { 'custom-qingmo-memo': '', 'custom-qingmo-added': '' }
             });
         return { id };
+    }
+    async periodStats({ year = new Date().getFullYear(), month = null } = {}) {
+        if (
+            !Number.isInteger(year) ||
+            year < 1 ||
+            year > 9999 ||
+            (month !== null && (!Number.isInteger(month) || month < 1 || month > 12))
+        )
+            throw new Error('INVALID_PERIOD');
+        const prefix = String(year).padStart(4, '0') + (month === null ? '' : String(month).padStart(2, '0'));
+        const contentLength = textLengthSQL("COALESCE(b.content,'')");
+        // Native content includes each image's alt, destination and title. Remove
+        // their lengths using the image spans, rather than removing matching prose.
+        const imageText = `COALESCE(sp.content,'') || replace(replace(replace(substr(sp.markdown,instr(sp.markdown,'](')+2,length(sp.markdown)-instr(sp.markdown,'](')-2),'"',''),'<',''),'>','')`;
+        const imageLength = textLengthSQL(imageText);
+        const rows = await this.sql(`${TREE}, span_words AS (
+            SELECT sp.block_id,SUM(CASE WHEN sp.type='img' THEN ${imageLength} WHEN instr(' '||sp.type||' ',' tag ')>0 THEN 2 ELSE 0 END) AS excluded
+            FROM spans sp WHERE sp.type='img' OR instr(' '||sp.type||' ',' tag ')>0 GROUP BY sp.block_id
+        ), leaf_words AS (
+            SELECT b.id,MAX(0,${contentLength}-COALESCE(sp.excluded,0)) AS words
+            FROM blocks b LEFT JOIN span_words sp ON sp.block_id=b.id WHERE b.type NOT IN ('d','audio','video','iframe') AND NOT EXISTS (SELECT 1 FROM blocks child WHERE child.parent_id=b.id)
+        ), memo_words AS (
+            SELECT m.id,substr(m.created,1,8) AS day,COALESCE(SUM(w.words),0) AS words
+            FROM memos m LEFT JOIN descendants d ON d.memo_id=m.id LEFT JOIN leaf_words w ON w.id=d.id
+            WHERE substr(m.created,1,${prefix.length})=${literal(prefix)} GROUP BY m.id
+        ), daily AS (
+            SELECT day,COUNT(*) AS count,SUM(words) AS words FROM memo_words GROUP BY day
+        ), buckets AS (
+            SELECT ${month === null ? 'substr(day,1,6)' : 'day'} AS date,SUM(count) AS count,SUM(words) AS words,COUNT(*) AS days,MAX(count) AS maxCount,MAX(words) AS maxWords FROM daily GROUP BY ${month === null ? 'substr(day,1,6)' : 'day'}
+        ) SELECT * FROM buckets ORDER BY date`);
+        return {
+            year,
+            month,
+            memoCount: rows.reduce((sum, row) => sum + row.count, 0),
+            wordCount: rows.reduce((sum, row) => sum + row.words, 0),
+            recordDays: rows.reduce((sum, row) => sum + row.days, 0),
+            maxCount: Math.max(0, ...rows.map(row => row.maxCount)),
+            maxWords: Math.max(0, ...rows.map(row => row.maxWords)),
+            buckets: rows.map(row => ({ date: row.date, count: row.count, words: row.words }))
+        };
     }
     async stats() {
         const today = new Date();

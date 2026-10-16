@@ -18,6 +18,8 @@
         onsettings,
         choose,
         onmenu,
+        onedit,
+        desktop = false,
         onimage,
         oninsight,
         onhistory,
@@ -239,6 +241,8 @@
         <div class="qm-review-stack">
             <MemoCard
                 {memo}
+                {desktop}
+                {onedit}
                 {t}
                 {renderMarkdown}
                 {renderBlockDOM}

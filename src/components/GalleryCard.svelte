@@ -1,8 +1,10 @@
 <script>
     import { safeURL } from '../views/context.js';
+    import { historyPlainText } from '../core/history.js';
     import Button from './Button.svelte';
     let { memo, t, onmenu, onimage } = $props();
     let images = $derived(memo.images.filter(path => safeURL(path, true)));
+    let excerpt = $derived(historyPlainText(memo.dom, document));
     let date = $derived(String(memo.created || ''));
 </script>
 
@@ -12,7 +14,7 @@
         {#if images.length > 1}<span>{images.length}</span>{/if}
     </button>
     <div class="qm-gallery-detail">
-        <p>{memo.content}</p>
+        <p>{excerpt}</p>
         <div>
             <time
                 >{#if memo.pinned}{t('pinnedLabel')} ·

@@ -383,6 +383,12 @@
     letter-spacing: 0.02em;
 }
 .qm-counts {
+    width: 100%;
+    border: 0;
+    background: transparent;
+    text-align: left;
+    border-radius: 8px;
+    cursor: pointer;
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     margin: 23px 0 20px;
@@ -2103,4 +2109,8 @@
 }
 .qm-root[data-layout='mobile'] .qm-tools .qm-record-button {
     margin-right: 0;
+}
+
+.qm-counts:hover {
+    background: var(--qm-fill);
 }

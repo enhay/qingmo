@@ -5,7 +5,8 @@
     import Icon from '../components/Icon.svelte';
     const { options, shared } = getContext(CONTEXT),
         { t, mode = 'fullscreen', onClose } = options;
-    let { stats, filter, choose, openReview, showSettings, flushDraft, onnotify, onTagMenu, layout } = $props();
+    let { stats, filter, choose, openReview, showSettings, flushDraft, onnotify, onTagMenu, layout, onstatistics } =
+        $props();
     let dateInput = $state();
     let expanded = $state(false),
         query = $state(''),
@@ -140,11 +141,11 @@
             />{/if}
     </div>
 </div>
-<div class="qm-counts">
+<button type="button" class="qm-counts" aria-label={t('viewStatistics')} onclick={onstatistics}>
     {#each [['memoCount', 'notes'], ['tagCount', 'tags'], ['dayCount', 'days']] as [key, label]}<div>
             <strong>{stats[key] || 0}</strong><span>{t(label)}</span>
         </div>{/each}
-</div>
+</button>
 <div class="qm-heatmap">
     {#each heat as week}<div class="qm-heat-week">
             {#each week.days as day}<button

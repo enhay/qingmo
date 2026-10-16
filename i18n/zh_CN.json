@@ -286,5 +286,17 @@
   "historyYesterday": "昨天 {time}",
   "historyDaysAgo": "{days} 天前",
   "historyDate": "{date} {time}",
-  "wordCount": "{count} 字"
+  "wordCount": "{count} 字",
+  "statistics": "统计",
+  "viewStatistics": "查看记录统计",
+  "statPeriod": "统计范围",
+  "statMonth": "月",
+  "statYear": "年",
+  "statWords": "字数",
+  "statMaxCount": "单日最多条数",
+  "statMaxWords": "单日最多字数",
+  "recordDays": "记录天数",
+  "statChart": "笔记条数",
+  "statDayCount": "{month} 月 {day} 日 {count} 条",
+  "statMonthCount": "{month} 月 {count} 条"
 }

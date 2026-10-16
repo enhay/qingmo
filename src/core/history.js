@@ -4,9 +4,11 @@ export function countText(text) {
 export function historyPlainText(dom, doc) {
     const template = doc.createElement('template');
     template.innerHTML = dom;
-    template.content.querySelectorAll('img,audio,video,.protyle-attr,script,style').forEach(node => node.remove());
-    return [...template.content.querySelectorAll('[contenteditable="true"]')]
-        .filter(node => !node.querySelector('[contenteditable="true"]'))
+    template.content
+        .querySelectorAll('[data-type="img"],img,audio,video,.protyle-attr,.protyle-action,script,style')
+        .forEach(node => node.remove());
+    return [...template.content.querySelectorAll('[data-node-id]')]
+        .filter(node => !node.querySelector('[data-node-id]'))
         .map(node => node.textContent.replace(/[\u200b\u2060]/g, ''))
         .join('');
 }

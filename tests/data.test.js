@@ -168,3 +168,44 @@ test('原生内联图片保留说明、标题、位置和重复；末尾附件�
         images: ['assets/a.png', 'assets/a.png']
     });
 });
+
+test('统计按创建日聚合完整卡片集合，不因子块重复计算记录天数与单日最多', async () => {
+    // Later changes to descendant joins must not multiply one card into several records.
+    const { DatabaseSync } = await import('node:sqlite');
+    const db = new DatabaseSync(':memory:');
+    try {
+        db.exec(`CREATE TABLE blocks(id TEXT,parent_id TEXT,root_id TEXT,type TEXT,created TEXT,content TEXT);
+            CREATE TABLE attributes(block_id TEXT,name TEXT,value TEXT);
+            CREATE TABLE spans(block_id TEXT,type TEXT,content TEXT,markdown TEXT);
+            INSERT INTO blocks VALUES
+            ('a','doc','doc','s','20261001080000','重复容器'),
+            ('a1','a','doc','p','20261001080000','甲　乙'),
+            ('a2','a','doc','p','20261001080000','😀'),
+            ('b','doc','doc','p','20261001100000','丙'),
+            ('c','doc','doc','p','20261003080000','丁'),
+            ('d','doc','doc','p','20261101080000','戊');
+            INSERT INTO attributes VALUES ('a','custom-qingmo-memo','1'),('b','custom-qingmo-memo','1'),('c','custom-qingmo-memo','1'),('d','custom-qingmo-memo','1');`);
+        const repository = new MemoRepository(async (path, body) => {
+            if (path === '/api/sqlite/flushTransaction') return null;
+            return db.prepare(body.stmt).all();
+        });
+        const month = await repository.periodStats({ year: 2026, month: 10 });
+        assert.deepEqual(month.buckets, [
+            { date: '20261001', count: 2, words: 4 },
+            { date: '20261003', count: 1, words: 1 }
+        ]);
+        assert.equal(month.memoCount, 3);
+        assert.equal(month.wordCount, 5);
+        assert.equal(month.recordDays, 2);
+        assert.equal(month.maxCount, 2);
+        assert.equal(month.maxWords, 4);
+        const year = await repository.periodStats({ year: 2026 });
+        assert.deepEqual(year.buckets, [
+            { date: '202610', count: 3, words: 5 },
+            { date: '202611', count: 1, words: 1 }
+        ]);
+        assert.equal(year.recordDays, 3);
+    } finally {
+        db.close();
+    }
+});

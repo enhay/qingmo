@@ -2,6 +2,7 @@
     import { getContext, onMount, tick } from 'svelte';
     import { CONTEXT, safeURL } from './context.js';
     import { parseMemoMarkdown, normalizeTags, DraftStore, COLLECT_TAG } from '../core/data.js';
+    import { historyPlainText } from '../core/history.js';
     import { startRecording, transcribeAudio, audioErrorCode } from '../core/transcription.js';
     import RichEditor from '../editor/RichEditor.svelte';
     import Button from '../components/Button.svelte';
@@ -779,9 +780,9 @@
                 aria-selected={referenceIndex === i}
                 onmousedown={e => e.preventDefault()}
                 onclick={() => completeReference(item)}
-                >{#if item.local}<small>{item.created?.slice(0, 8)}</small><span>{item.label}</span>{:else}<span
-                        >{item.label}</span
-                    ><small>{item.path}</small>{/if}</button
+                >{#if item.local}<small>{item.created?.slice(0, 8)}</small><span
+                        >{item.dom ? historyPlainText(item.dom, doc) : item.label}</span
+                    >{:else}<span>{item.label}</span><small>{item.path}</small>{/if}</button
             >{/each}
         {#each tagOptions as tag, i}<button
                 type="button"

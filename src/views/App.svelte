@@ -8,6 +8,7 @@
     import Review from './Review.svelte';
     import Insights from './Insights.svelte';
     import Scope from './Scope.svelte';
+    import Statistics from './Statistics.svelte';
     import Settings from './Settings.svelte';
     import History from './History.svelte';
     import Button from '../components/Button.svelte';
@@ -454,6 +455,7 @@
         />
     </div>
 {/snippet}
+<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
 <div
     bind:this={root}
     role="region"
@@ -477,7 +479,10 @@
         else if (!composeOpen && !reviewMode && stream.scrollTop === 0 && dy > 80) refresh();
     }}
 >
-    {#if reviewMode === 'insight'}{#key insight?.viewId + ':' + insight?.memoId + ':' + insight?.history}<Insights
+    {#if reviewMode === 'statistics'}<Statistics
+            onback={closeReview}
+            {choose}
+        />{:else if reviewMode === 'insight'}{#key insight?.viewId + ':' + insight?.memoId + ':' + insight?.history}<Insights
                 bind:this={review}
                 {...insight}
                 {root}
@@ -490,6 +495,8 @@
                 inert={!!modal}
                 bind:this={review}
                 mode={reviewMode}
+                desktop={layout === 'desktop'}
+                onedit={memo => (memo.type === 'p' || memo.type === 's' ? compose(memo) : openBlock(memo.id))}
                 onback={() => (reviewMode === 'views' ? closeReview() : openReview('views'))}
                 onmode={openReview}
                 oninsight={openInsight}
@@ -517,6 +524,7 @@
             {choose}
             {openReview}
             {showSettings}
+            onstatistics={() => openReview('statistics')}
             {layout}
             onnotify={notify}
             flushDraft={() => composer?.flushDraft()}
