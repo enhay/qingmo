@@ -173,7 +173,7 @@
         gap: 3px;
         padding-bottom: 20px;
     }
-    .qm-stat-bar {
+    .qm-statistics button.qm-stat-bar {
         flex: 1;
         display: flex;
         align-items: flex-end;
