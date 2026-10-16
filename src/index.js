@@ -5,7 +5,7 @@ import { mount, unmount } from 'svelte';
 import FloatingCapture from './components/FloatingCapture.svelte';
 
 const TAB_TYPE = 'qingmo-tab';
-import { MemoRepository, DEFAULT_SETTINGS } from './core/data.js';
+import { MemoRepository, DEFAULT_SETTINGS, COLLECT_TAG } from './core/data.js';
 import { InsightService } from './core/insights.js';
 import { createEditor } from './editor/editor.js';
 import { transcribeAudio } from './core/transcription.js';
@@ -128,12 +128,13 @@ export default class QingMoPlugin extends Plugin {
             if (
                 String(detail.protyle.background?.ial?.tags || '')
                     .split(',')
-                    .some(tag => tag.trim() === '轻墨')
+                    .some(tag => tag.trim() === COLLECT_TAG)
             )
                 return;
             const hasTag = element =>
                 Array.from(element.querySelectorAll('[data-type~="tag"]')).some(tag => {
-                    if (tag.textContent.replace(/^[\u2060\u200b#]+|[\u2060\u200b#]+$/g, '') !== '轻墨') return false;
+                    if (tag.textContent.replace(/^[\u2060\u200b#]+|[\u2060\u200b#]+$/g, '') !== COLLECT_TAG)
+                        return false;
                     const owner = tag.closest('[data-node-id]');
                     const parent = owner?.parentElement?.closest('[data-node-id]');
                     const candidate =
@@ -159,9 +160,9 @@ export default class QingMoPlugin extends Plugin {
                         if (remove) {
                             if (!memo) return;
                             const explanation =
-                                memo.marker === '1' && memo.tags.includes('轻墨')
+                                memo.marker === '1' && memo.tags.includes(COLLECT_TAG)
                                     ? 'removeBothExplanation'
-                                    : memo.tags.includes('轻墨')
+                                    : memo.tags.includes(COLLECT_TAG)
                                       ? 'removeTagExplanation'
                                       : 'removeAttrExplanation';
                             if (!window.confirm(this.t('removeConfirm') + '\n' + this.t(explanation))) return;

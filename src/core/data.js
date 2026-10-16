@@ -9,6 +9,9 @@ const DEFAULT_SETTINGS = {
     tencentSecretId: '',
     tencentSecretKey: ''
 };
+// 收录开关标签：正文或文档标签精确等于它时收入轻墨（PRD 6.1）。
+const COLLECT_TAG = '轻墨';
+const COLLECT_TOKEN = '#' + COLLECT_TAG + '#';
 const literal = value => "'" + String(value).replace(/'/g, "''") + "'";
 const localDay = date =>
     `${date.getFullYear()}${String(date.getMonth() + 1).padStart(2, '0')}${String(date.getDate()).padStart(2, '0')}`;
@@ -125,9 +128,9 @@ function removeNativeTagMarkdown(markdown) {
         for (let i = 0; i < part.length;) {
             const start = i,
                 linked = part[i] === '[' || (part[i] === '#' && part[i + 1] === '[');
-            if (part[i] === '\\' && part.startsWith('#轻墨#', i + 1)) {
-                out += part.slice(i, i + 5);
-                i += 5;
+            if (part[i] === '\\' && part.startsWith(COLLECT_TOKEN, i + 1)) {
+                out += part.slice(i, i + 1 + COLLECT_TOKEN.length);
+                i += 1 + COLLECT_TOKEN.length;
                 continue;
             }
             if (part[i] === '<') {
@@ -150,27 +153,19 @@ function removeNativeTagMarkdown(markdown) {
                         j++;
                     }
                     if (depth === 0) {
-                        const tagged = part[i] === '#' && part[j] === '#' && part.slice(bracket + 1, end) === '轻墨';
+                        const tagged =
+                            part[i] === '#' && part[j] === '#' && part.slice(bracket + 1, end) === COLLECT_TAG;
                         out += tagged ? part.slice(bracket, j) : part.slice(i, j);
                         i = j + (tagged ? 1 : 0);
                         continue;
                     }
                 }
             }
-            if (
-                part.startsWith('**#轻墨#**', i) ||
-                part.startsWith('~~#轻墨#~~', i) ||
-                part.startsWith('__#轻墨#__', i)
-            ) {
-                i += 8;
-                continue;
-            }
-            if (part.startsWith('*#轻墨#*', i) || part.startsWith('_#轻墨#_', i)) {
-                i += 6;
-                continue;
-            }
-            if (part.startsWith('#轻墨#', i)) {
-                i += 4;
+            const wrapper = ['**', '~~', '__', '*', '_', ''].find(mark =>
+                part.startsWith(mark + COLLECT_TOKEN + mark, i)
+            );
+            if (wrapper !== undefined) {
+                i += COLLECT_TOKEN.length + wrapper.length * 2;
                 continue;
             }
             if (/^(?:[a-z][a-z\d+.-]*:\/\/|mailto:)/i.test(part.slice(i, i + 20))) {
@@ -234,14 +229,14 @@ class DraftStore {
 const MEMOS = `all_tags AS (
  SELECT block_id,content AS name FROM spans WHERE instr(' '||type||' ',' tag ')>0
 ), tagged_docs AS (
- SELECT DISTINCT b.id FROM blocks b JOIN all_tags t ON t.block_id=b.id WHERE b.type='d' AND t.name='轻墨'
+ SELECT DISTINCT b.id FROM blocks b JOIN all_tags t ON t.block_id=b.id WHERE b.type='d' AND t.name=${literal(COLLECT_TAG)}
 ), marked AS (
  SELECT b.id,b.created,b.type,b.root_id FROM blocks b WHERE b.type<>'d' AND EXISTS
  (SELECT 1 FROM attributes a WHERE a.block_id=b.id AND a.name='custom-qingmo-memo' AND a.value='1')
 ), tag_candidates AS (
  SELECT DISTINCT CASE WHEN b.type='p' AND p.type IN ('i','b','s') THEN p.id ELSE b.id END AS id
  FROM spans sp JOIN blocks b ON b.id=sp.block_id LEFT JOIN blocks p ON p.id=b.parent_id
- WHERE instr(' '||sp.type||' ',' tag ')>0 AND sp.content='轻墨' AND b.type<>'d'
+ WHERE instr(' '||sp.type||' ',' tag ')>0 AND sp.content=${literal(COLLECT_TAG)} AND b.type<>'d'
 ), climb(candidate,id,parent_id,depth) AS (
  SELECT t.id,b.id,b.parent_id,0 FROM tag_candidates t JOIN blocks b ON b.id=t.id
  UNION ALL SELECT c.candidate,p.id,p.parent_id,c.depth+1 FROM climb c JOIN blocks p ON p.id=c.parent_id
@@ -437,13 +432,13 @@ class MemoRepository {
         if (memo.type === 'd') {
             const tags = String(attrs.tags || '')
                 .split(',')
-                .filter(value => value.trim() !== '轻墨')
+                .filter(value => value.trim() !== COLLECT_TAG)
                 .join(',');
             await this.request('/api/attr/setBlockAttrs', { id, attrs: { tags } });
             return { id };
         }
         const leaves = await this.sql(
-            `WITH RECURSIVE nodes(id) AS (SELECT ${literal(id)} UNION ALL SELECT b.id FROM blocks b JOIN nodes n ON b.parent_id=n.id JOIN blocks current ON current.id=n.id WHERE b.type<>'h' AND current.type<>'h') SELECT DISTINCT n.id FROM nodes n JOIN spans sp ON sp.block_id=n.id WHERE instr(' '||sp.type||' ',' tag ')>0 AND sp.content='轻墨'`
+            `WITH RECURSIVE nodes(id) AS (SELECT ${literal(id)} UNION ALL SELECT b.id FROM blocks b JOIN nodes n ON b.parent_id=n.id JOIN blocks current ON current.id=n.id WHERE b.type<>'h' AND current.type<>'h') SELECT DISTINCT n.id FROM nodes n JOIN spans sp ON sp.block_id=n.id WHERE instr(' '||sp.type||' ',' tag ')>0 AND sp.content=${literal(COLLECT_TAG)}`
         );
         for (const row of leaves) {
             const result = await this.request('/api/block/getBlockKramdown', { id: row.id });
@@ -673,6 +668,7 @@ function stableReviewIds(ids, scope, storage, date = new Date()) {
     return order;
 }
 export {
+    COLLECT_TAG,
     normalizeScope,
     stableReviewIds,
     transformProse,

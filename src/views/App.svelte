@@ -2,7 +2,7 @@
     import { setContext, onMount, tick, untrack } from 'svelte';
     import { CONTEXT, displayDay } from './context.js';
     import { audioErrorCode } from '../core/transcription.js';
-    import { parseMemoMarkdown } from '../core/data.js';
+    import { parseMemoMarkdown, COLLECT_TAG } from '../core/data.js';
     import Sidebar from './Sidebar.svelte';
     import Composer from './Composer.svelte';
     import Review from './Review.svelte';
@@ -800,9 +800,9 @@
                             memo.type === 'd'
                                 ? 'removeDocumentExplanation'
                                 : memo.external
-                                  ? memo.marker === '1' && memo.tags.includes('轻墨')
+                                  ? memo.marker === '1' && memo.tags.includes(COLLECT_TAG)
                                       ? 'removeBothExplanation'
-                                      : memo.tags.includes('轻墨')
+                                      : memo.tags.includes(COLLECT_TAG)
                                         ? 'removeTagExplanation'
                                         : 'removeAttrExplanation'
                                   : 'deleteExplanation'

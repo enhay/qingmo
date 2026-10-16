@@ -1,7 +1,7 @@
 <script>
     import { getContext, onMount, tick } from 'svelte';
     import { CONTEXT, safeURL } from './context.js';
-    import { parseMemoMarkdown, normalizeTags, DraftStore } from '../core/data.js';
+    import { parseMemoMarkdown, normalizeTags, DraftStore, COLLECT_TAG } from '../core/data.js';
     import { startRecording, transcribeAudio, audioErrorCode } from '../core/transcription.js';
     import RichEditor from '../editor/RichEditor.svelte';
     import Button from '../components/Button.svelte';
@@ -401,8 +401,8 @@
             if (node.closest('code,pre')) return false;
             const value = node.textContent.replace(/[\u200b\u2060]/g, '').trim();
             return node.getAttribute('data-type')?.split(' ').includes('tag')
-                ? value.replace(/^#|#$/g, '') === '轻墨'
-                : value === '#轻墨#';
+                ? value.replace(/^#|#$/g, '') === COLLECT_TAG
+                : value === '#' + COLLECT_TAG + '#';
         });
     }
     async function submit() {
@@ -414,7 +414,7 @@
         if (
             editingMemo?.external &&
             editingMemo.marker !== '1' &&
-            editingMemo.tags.includes('轻墨') &&
+            editingMemo.tags.includes(COLLECT_TAG) &&
             !draftHasNativeTag(editor.value()) &&
             !win.confirm(t('editRemovesTagConfirm'))
         )

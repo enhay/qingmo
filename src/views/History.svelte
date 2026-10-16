@@ -2,6 +2,7 @@
     import { getContext, onMount } from 'svelte';
     import { CONTEXT, safeURL } from './context.js';
     import { historyMarkdown } from '../core/history.js';
+    import { COLLECT_TAG } from '../core/data.js';
     import { createEditor } from '../editor/editor.js';
     import Button from '../components/Button.svelte';
     const { options, shared } = getContext(CONTEXT),
@@ -91,7 +92,7 @@
                 if (
                     current.external &&
                     current.marker !== '1' &&
-                    current.tags.includes('轻墨') &&
+                    current.tags.includes(COLLECT_TAG) &&
                     !composer.draftHasNativeTag(text) &&
                     !win.confirm(t('editRemovesTagConfirm'))
                 )
