@@ -6,6 +6,7 @@
 
 - 产品行为：[docs/轻墨-PRD.md](docs/轻墨-PRD.md)
 - 当前交付顺序与状态：[docs/plans/2026-10-12-phase-two.md](docs/plans/2026-10-12-phase-two.md)
+- 三轮交互细节对齐：[docs/plans/2026-10-16-interaction-polish.md](docs/plans/2026-10-16-interaction-polish.md)
 - 界面尺寸与交互：[docs/design/轻墨-design.md](docs/design/轻墨-design.md)
 - 界面代码写法：[docs/前端约定.md](docs/前端约定.md)
 
