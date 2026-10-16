@@ -7,7 +7,9 @@ test('标签页与侧栏保存不同字段后，文件与共享设置保留两�
     let persisted;
     const settings = createSettings({
         initial: { notebook: 'book', reviewCount: 5 },
-        persist: async value => { persisted = structuredClone(value); }
+        persist: async value => {
+            persisted = structuredClone(value);
+        }
     });
     await Promise.all([settings.save({ reviewCount: 3 }), settings.save({ openOnStartup: true })]);
     assert.equal(persisted.reviewCount, 3);

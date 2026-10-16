@@ -1,49 +1,396 @@
 <script>
- import {getContext,tick} from 'svelte';
- import {CONTEXT,displayDay} from './context.js';
- import Button from '../components/Button.svelte';
- import Icon from '../components/Icon.svelte';
- const {options,shared}=getContext(CONTEXT),{t,mode='fullscreen',onClose}=options;
- let {stats,filter,choose,openReview,showSettings,flushDraft,onnotify,onTagMenu,layout}=$props();
- let dateInput=$state();
- let expanded=$state(false),query=$state(''),collapsed=$state([]),favoritesClosed=$state(false),searching=$state(false),searchInput=$state(),searchButton=$state();
- async function setSearch(open){searching=open;if(!open)query='';await tick();(open?searchInput:searchButton)?.focus();}
- let storage;try{storage=options.container.ownerDocument.defaultView.localStorage;const raw=JSON.parse(storage.getItem('qingmo:tags:collapsed')||'[]');collapsed=Array.isArray(raw)?raw:[];favoritesClosed=storage.getItem('qingmo:tags:favoritesClosed')==='true';}catch{collapsed=[];}
- function toggle(name){collapsed=collapsed.includes(name)?collapsed.filter(x=>x!==name):[...collapsed,name];try{storage?.setItem('qingmo:tags:collapsed',JSON.stringify(collapsed));}catch{}}
- async function favorite(name){const current=shared.settings.favoriteTags||[];try{await shared.saveSettings({favoriteTags:current.includes(name)?current.filter(x=>x!==name):[...current,name]});onnotify(current.includes(name)?'favoriteRemoved':'favoriteAdded');}catch{onnotify('settingsFailed');}}
- let favorites=$derived((shared.settings.favoriteTags||[]).map(name=>nodes.find(x=>x.name===name)).filter(Boolean));
- let visible=$derived(nodes.filter(node=>query?nodes.some(x=>x.name.toLocaleLowerCase().includes(query.toLocaleLowerCase())&&(x.name===node.name||x.name.startsWith(node.name+'/'))):!collapsed.some(name=>node.name.startsWith(name+'/'))));
- let allSelected=$derived(filter.kind==='all'&&!filter.tag&&!filter.day&&!filter.keyword&&filter.source==='all');
- let nodes=$derived.by(()=>{const nodes=new Map();(stats.tags||[]).forEach(tag=>{tag.name.split('/').forEach((_,i,parts)=>{const name=parts.slice(0,i+1).join('/');if(!nodes.has(name))nodes.set(name,{name,count:0,depth:i});});nodes.get(tag.name).count=tag.count;});return [...nodes.values()].sort((a,b)=>a.name.localeCompare(b.name));});
- let heat=$derived.by(()=>{const today=new Date();today.setHours(0,0,0,0);const start=new Date(today);start.setDate(start.getDate()-start.getDay()-77);const map=new Map((stats.heatmap||[]).map(x=>[x.date,x.count]));let previous=-1;return Array.from({length:12},(_,week)=>{let label='';const days=Array.from({length:7},(_,day)=>{const date=new Date(start);date.setDate(start.getDate()+week*7+day);const key=`${date.getFullYear()}${String(date.getMonth()+1).padStart(2,'0')}${String(date.getDate()).padStart(2,'0')}`,count=map.get(key)||0;if(date<=today&&date.getMonth()!==previous){label=t('month',{month:date.getMonth()+1});previous=date.getMonth();}return {key,count,disabled:date>today,today:+date===+today,level:count===0?0:count<=2?1:count<=5?2:count<=9?3:4};});return {days,label};});});
- const today=new Date(),max=`${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
+    import { getContext, tick } from 'svelte';
+    import { CONTEXT, displayDay } from './context.js';
+    import Button from '../components/Button.svelte';
+    import Icon from '../components/Icon.svelte';
+    const { options, shared } = getContext(CONTEXT),
+        { t, mode = 'fullscreen', onClose } = options;
+    let { stats, filter, choose, openReview, showSettings, flushDraft, onnotify, onTagMenu, layout } = $props();
+    let dateInput = $state();
+    let expanded = $state(false),
+        query = $state(''),
+        collapsed = $state([]),
+        favoritesClosed = $state(false),
+        searching = $state(false),
+        searchInput = $state(),
+        searchButton = $state();
+    async function setSearch(open) {
+        searching = open;
+        if (!open) query = '';
+        await tick();
+        (open ? searchInput : searchButton)?.focus();
+    }
+    let storage;
+    try {
+        storage = options.container.ownerDocument.defaultView.localStorage;
+        const raw = JSON.parse(storage.getItem('qingmo:tags:collapsed') || '[]');
+        collapsed = Array.isArray(raw) ? raw : [];
+        favoritesClosed = storage.getItem('qingmo:tags:favoritesClosed') === 'true';
+    } catch {
+        collapsed = [];
+    }
+    function toggle(name) {
+        collapsed = collapsed.includes(name) ? collapsed.filter(x => x !== name) : [...collapsed, name];
+        try {
+            storage?.setItem('qingmo:tags:collapsed', JSON.stringify(collapsed));
+        } catch {}
+    }
+    async function favorite(name) {
+        const current = shared.settings.favoriteTags || [];
+        try {
+            await shared.saveSettings({
+                favoriteTags: current.includes(name) ? current.filter(x => x !== name) : [...current, name]
+            });
+            onnotify(current.includes(name) ? 'favoriteRemoved' : 'favoriteAdded');
+        } catch {
+            onnotify('settingsFailed');
+        }
+    }
+    let favorites = $derived(
+        (shared.settings.favoriteTags || []).map(name => nodes.find(x => x.name === name)).filter(Boolean)
+    );
+    let visible = $derived(
+        nodes.filter(node =>
+            query
+                ? nodes.some(
+                      x =>
+                          x.name.toLocaleLowerCase().includes(query.toLocaleLowerCase()) &&
+                          (x.name === node.name || x.name.startsWith(node.name + '/'))
+                  )
+                : !collapsed.some(name => node.name.startsWith(name + '/'))
+        )
+    );
+    let allSelected = $derived(
+        filter.kind === 'all' && !filter.tag && !filter.day && !filter.keyword && filter.source === 'all'
+    );
+    let nodes = $derived.by(() => {
+        const nodes = new Map();
+        (stats.tags || []).forEach(tag => {
+            tag.name.split('/').forEach((_, i, parts) => {
+                const name = parts.slice(0, i + 1).join('/');
+                if (!nodes.has(name)) nodes.set(name, { name, count: 0, depth: i });
+            });
+            nodes.get(tag.name).count = tag.count;
+        });
+        return [...nodes.values()].sort((a, b) => a.name.localeCompare(b.name));
+    });
+    let heat = $derived.by(() => {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const start = new Date(today);
+        start.setDate(start.getDate() - start.getDay() - 77);
+        const map = new Map((stats.heatmap || []).map(x => [x.date, x.count]));
+        let previous = -1;
+        return Array.from({ length: 12 }, (_, week) => {
+            let label = '';
+            const days = Array.from({ length: 7 }, (_, day) => {
+                const date = new Date(start);
+                date.setDate(start.getDate() + week * 7 + day);
+                const key = `${date.getFullYear()}${String(date.getMonth() + 1).padStart(2, '0')}${String(date.getDate()).padStart(2, '0')}`,
+                    count = map.get(key) || 0;
+                if (date <= today && date.getMonth() !== previous) {
+                    label = t('month', { month: date.getMonth() + 1 });
+                    previous = date.getMonth();
+                }
+                return {
+                    key,
+                    count,
+                    disabled: date > today,
+                    today: +date === +today,
+                    level: count === 0 ? 0 : count <= 2 ? 1 : count <= 5 ? 2 : count <= 9 ? 3 : 4
+                };
+            });
+            return { days, label };
+        });
+    });
+    const today = new Date(),
+        max = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
 </script>
-{#snippet datePicker(className)}<input bind:this={dateInput} class={className} type="date" {max} aria-label={t('filterDate')} title={t('filterDate')} tabindex={className==='qm-date-hidden'?-1:undefined} aria-hidden={className==='qm-date-hidden'?'true':undefined} value={displayDay(filter.day)} onchange={e=>choose({day:e.currentTarget.value.replace(/-/g,'')})}/>{/snippet}
-<div class="qm-side-top"><strong>{t('appName')}</strong><div class="qm-side-actions">{#if layout==='desktop'}<Button label={t('filterDate')} icon="calendar" onclick={()=>dateInput.showPicker()}/>{@render datePicker('qm-date-hidden')}{/if}<Button label={t('settings')} icon="settings" onclick={()=>showSettings()}/>{#if mode==='fullscreen'}<Button label={t('close')} icon="exit" onclick={()=>{flushDraft();onClose?.();}}/>{/if}</div></div>
-<div class="qm-counts">{#each [['memoCount','notes'],['tagCount','tags'],['dayCount','days']] as [key,label]}<div><strong>{stats[key]||0}</strong><span>{t(label)}</span></div>{/each}</div>
-<div class="qm-heatmap">{#each heat as week}<div class="qm-heat-week">{#each week.days as day}<button type="button" class="qm-heat-cell" class:qm-today={day.today} data-level={day.level} disabled={day.disabled} aria-label={t('heatDay',{date:displayDay(day.key),count:day.count})} title={t('heatDay',{date:displayDay(day.key),count:day.count})} aria-pressed={filter.day===day.key} onclick={()=>choose({day:filter.day===day.key?'':day.key})}></button>{/each}</div>{/each}</div>
-<div class="qm-months">{#each heat as week}<span>{week.label}</span>{/each}{#if layout!=='desktop'}{@render datePicker('qm-date-filter')}{/if}</div>
-<nav class="qm-nav"><Button label={t('review')} icon="grid" class="qm-nav-row" onclick={()=>openReview('views')}><span>{t('review')}</span></Button>
- <div class="qm-nav-row qm-nav-all" class:qm-selected={allSelected}><Button label={t('noteFilters')} class="qm-nav-disclosure" aria-expanded={expanded} onclick={()=>expanded=!expanded}><Icon name="grid"/><Icon name="triangle"/></Button><Button label={t('all')} class="qm-nav-label" aria-pressed={allSelected} onclick={()=>choose({keyword:'',tag:'',kind:'all',day:'',source:'all'})}/></div>
- <div class="qm-nav-children" hidden={!expanded}>{#each ['untagged','image','audio','link'] as kind}<Button label={t(kind)} icon={kind==='image'?'image':kind==='link'?'link':kind==='audio'?'audio':'tag'} class={'qm-nav-row qm-nav-child'+(filter.kind===kind?' qm-selected':'')} aria-pressed={filter.kind===kind} onclick={()=>choose({kind})}><span>{t(kind)}</span></Button>{/each}</div>
+
+{#snippet datePicker(className)}<input
+        bind:this={dateInput}
+        class={className}
+        type="date"
+        {max}
+        aria-label={t('filterDate')}
+        title={t('filterDate')}
+        tabindex={className === 'qm-date-hidden' ? -1 : undefined}
+        aria-hidden={className === 'qm-date-hidden' ? 'true' : undefined}
+        value={displayDay(filter.day)}
+        onchange={e => choose({ day: e.currentTarget.value.replace(/-/g, '') })}
+    />{/snippet}
+<div class="qm-side-top">
+    <strong>{t('appName')}</strong>
+    <div class="qm-side-actions">
+        {#if layout === 'desktop'}<Button
+                label={t('filterDate')}
+                icon="calendar"
+                onclick={() => dateInput.showPicker()}
+            />{@render datePicker('qm-date-hidden')}{/if}<Button
+            label={t('settings')}
+            icon="settings"
+            onclick={() => showSettings()}
+        />{#if mode === 'fullscreen'}<Button
+                label={t('close')}
+                icon="exit"
+                onclick={() => {
+                    flushDraft();
+                    onClose?.();
+                }}
+            />{/if}
+    </div>
+</div>
+<div class="qm-counts">
+    {#each [['memoCount', 'notes'], ['tagCount', 'tags'], ['dayCount', 'days']] as [key, label]}<div>
+            <strong>{stats[key] || 0}</strong><span>{t(label)}</span>
+        </div>{/each}
+</div>
+<div class="qm-heatmap">
+    {#each heat as week}<div class="qm-heat-week">
+            {#each week.days as day}<button
+                    type="button"
+                    class="qm-heat-cell"
+                    class:qm-today={day.today}
+                    data-level={day.level}
+                    disabled={day.disabled}
+                    aria-label={t('heatDay', { date: displayDay(day.key), count: day.count })}
+                    title={t('heatDay', { date: displayDay(day.key), count: day.count })}
+                    aria-pressed={filter.day === day.key}
+                    onclick={() => choose({ day: filter.day === day.key ? '' : day.key })}
+                ></button>{/each}
+        </div>{/each}
+</div>
+<div class="qm-months">
+    {#each heat as week}<span>{week.label}</span>{/each}{#if layout !== 'desktop'}{@render datePicker(
+            'qm-date-filter'
+        )}{/if}
+</div>
+<nav class="qm-nav">
+    <Button label={t('review')} icon="grid" class="qm-nav-row" onclick={() => openReview('views')}
+        ><span>{t('review')}</span></Button
+    >
+    <div class="qm-nav-row qm-nav-all" class:qm-selected={allSelected}>
+        <Button
+            label={t('noteFilters')}
+            class="qm-nav-disclosure"
+            aria-expanded={expanded}
+            onclick={() => (expanded = !expanded)}><Icon name="grid" /><Icon name="triangle" /></Button
+        ><Button
+            label={t('all')}
+            class="qm-nav-label"
+            aria-pressed={allSelected}
+            onclick={() => choose({ keyword: '', tag: '', kind: 'all', day: '', source: 'all' })}
+        />
+    </div>
+    <div class="qm-nav-children" hidden={!expanded}>
+        {#each ['untagged', 'image', 'audio', 'link'] as kind}<Button
+                label={t(kind)}
+                icon={kind === 'image' ? 'image' : kind === 'link' ? 'link' : kind === 'audio' ? 'audio' : 'tag'}
+                class={'qm-nav-row qm-nav-child' + (filter.kind === kind ? ' qm-selected' : '')}
+                aria-pressed={filter.kind === kind}
+                onclick={() => choose({ kind })}><span>{t(kind)}</span></Button
+            >{/each}
+    </div>
 </nav>
-{#snippet tagRow(tag,tree=false)}
- {@const label=query||!tree?tag.name:tag.name.split('/').pop()}
- {@const match=query?label.toLocaleLowerCase().indexOf(query.toLocaleLowerCase()):-1}
- <div class="qm-tag-line" style:padding-left={tree?tag.depth*16+'px':undefined} style:--qm-tag-indent={tree?tag.depth*16+'px':'0px'} class:qm-tag-nested={tree&&tag.depth>0}>
- {#if tree&&nodes.some(x=>x.name.startsWith(tag.name+'/'))}<Button label={t('toggleTag',{tag:tag.name})} icon="chevron" class="qm-tag-toggle" aria-expanded={!!query||!collapsed.includes(tag.name)} onclick={()=>toggle(tag.name)}/>{:else}<span class="qm-tag-spacer" aria-hidden="true"></span>{/if}
- <button type="button" class="qm-tag-row" class:qm-selected={filter.tag===tag.name} aria-pressed={filter.tag===tag.name} onclick={()=>choose({tag:filter.tag===tag.name?'':tag.name})}><span>#{#if match>=0}{label.slice(0,match)}<strong>{label.slice(match,match+query.length)}</strong>{label.slice(match+query.length)}{:else}{label}{/if}</span><span class="qm-tag-count">{tag.count||''}</span></button>
- <Button label={t('tagActions')} icon="more" class="qm-tag-more" aria-haspopup="dialog" onclick={e=>onTagMenu(tag.name,e.currentTarget,()=>favorite(tag.name))}/>
- </div>
+{#snippet tagRow(tag, tree = false)}
+    {@const label = query || !tree ? tag.name : tag.name.split('/').pop()}
+    {@const match = query ? label.toLocaleLowerCase().indexOf(query.toLocaleLowerCase()) : -1}
+    <div
+        class="qm-tag-line"
+        style:padding-left={tree ? tag.depth * 16 + 'px' : undefined}
+        style:--qm-tag-indent={tree ? tag.depth * 16 + 'px' : '0px'}
+        class:qm-tag-nested={tree && tag.depth > 0}
+    >
+        {#if tree && nodes.some(x => x.name.startsWith(tag.name + '/'))}<Button
+                label={t('toggleTag', { tag: tag.name })}
+                icon="chevron"
+                class="qm-tag-toggle"
+                aria-expanded={!!query || !collapsed.includes(tag.name)}
+                onclick={() => toggle(tag.name)}
+            />{:else}<span class="qm-tag-spacer" aria-hidden="true"></span>{/if}
+        <button
+            type="button"
+            class="qm-tag-row"
+            class:qm-selected={filter.tag === tag.name}
+            aria-pressed={filter.tag === tag.name}
+            onclick={() => choose({ tag: filter.tag === tag.name ? '' : tag.name })}
+            ><span
+                >#{#if match >= 0}{label.slice(0, match)}<strong>{label.slice(match, match + query.length)}</strong
+                    >{label.slice(match + query.length)}{:else}{label}{/if}</span
+            ><span class="qm-tag-count">{tag.count || ''}</span></button
+        >
+        <Button
+            label={t('tagActions')}
+            icon="more"
+            class="qm-tag-more"
+            aria-haspopup="dialog"
+            onclick={e => onTagMenu(tag.name, e.currentTarget, () => favorite(tag.name))}
+        />
+    </div>
 {/snippet}
-{#if favorites.length}<section class="qm-tag-group"><Button label={t('favoriteTags')} class="qm-tag-group-title" aria-expanded={!favoritesClosed} onclick={()=>{favoritesClosed=!favoritesClosed;try{storage?.setItem('qingmo:tags:favoritesClosed',String(favoritesClosed));}catch{}}}><span>{t('favoriteTags')}</span><Icon name="chevron"/></Button>{#if !favoritesClosed}{#each favorites as tag}{@render tagRow(tag)}{/each}{/if}</section>{/if}
+{#if favorites.length}<section class="qm-tag-group">
+        <Button
+            label={t('favoriteTags')}
+            class="qm-tag-group-title"
+            aria-expanded={!favoritesClosed}
+            onclick={() => {
+                favoritesClosed = !favoritesClosed;
+                try {
+                    storage?.setItem('qingmo:tags:favoritesClosed', String(favoritesClosed));
+                } catch {}
+            }}><span>{t('favoriteTags')}</span><Icon name="chevron" /></Button
+        >{#if !favoritesClosed}{#each favorites as tag}{@render tagRow(tag)}{/each}{/if}
+    </section>{/if}
 <section class="qm-tag-group">
- <div class="qm-tag-heading">{#if searching}<div class="qm-tag-find"><Icon name="search"/><input bind:this={searchInput} class="qm-tag-search" type="search" aria-label={t('findTag')} placeholder={t('findTag')} bind:value={query} onkeydown={e=>{if(e.key==='Escape'){e.preventDefault();e.stopPropagation();setSearch(false);}}}/><Button label={t('clearSearch')} icon="close" onclick={()=>setSearch(false)}/></div>{:else}<span>{t('tags')}</span><Button label={t('findTag')} icon="search" bind:element={searchButton} class="qm-tag-find-button" onclick={()=>setSearch(true)}/>{/if}</div>
- <div class="qm-tag-tree">{#each visible as tag}{@render tagRow(tag,true)}{/each}{#if !visible.length&&query}<p>{t('noTags')}</p>{/if}</div>
+    <div class="qm-tag-heading">
+        {#if searching}<div class="qm-tag-find">
+                <Icon name="search" /><input
+                    bind:this={searchInput}
+                    class="qm-tag-search"
+                    type="search"
+                    aria-label={t('findTag')}
+                    placeholder={t('findTag')}
+                    bind:value={query}
+                    onkeydown={e => {
+                        if (e.key === 'Escape') {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            setSearch(false);
+                        }
+                    }}
+                /><Button label={t('clearSearch')} icon="close" onclick={() => setSearch(false)} />
+            </div>{:else}<span>{t('tags')}</span><Button
+                label={t('findTag')}
+                icon="search"
+                bind:element={searchButton}
+                class="qm-tag-find-button"
+                onclick={() => setSearch(true)}
+            />{/if}
+    </div>
+    <div class="qm-tag-tree">
+        {#each visible as tag}{@render tagRow(tag, true)}{/each}{#if !visible.length && query}<p>{t('noTags')}</p>{/if}
+    </div>
 </section>
+
 <style>
- .qm-tag-group{margin-top:20px}.qm-tag-heading{display:flex;align-items:center;justify-content:space-between;padding:0 12px 0 44px;min-height:44px;margin:0 0 4px}.qm-tag-heading>span{font-size:12px}.qm-tag-find{display:flex;align-items:center;gap:4px;width:100%;background:var(--qm-fill);border-radius:8px;padding-left:8px}.qm-tag-find :global(svg){width:14px;height:14px}.qm-tag-search{box-sizing:border-box;width:100%;min-width:0;height:36px;background:transparent;color:var(--qm-text);border:0;padding:8px;font-size:13px}.qm-tag-heading:has(.qm-tag-find){padding-left:12px}.qm-tag-line{position:relative;display:flex;align-items:center;min-height:44px}.qm-tag-line .qm-tag-row{flex:1;min-width:0;padding-left:0}.qm-tag-row>span:first-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.qm-tag-spacer{width:44px;flex-shrink:0}.qm-tag-line :global(.qm-button){width:44px;min-width:44px;min-height:44px}.qm-tag-line :global([aria-expanded="true"] svg),:global(.qm-tag-group-title[aria-expanded="true"] svg){transform:rotate(90deg)}:global(.qm-tag-group-title){padding-left:44px!important;font-size:12px!important;color:var(--qm-text-secondary)!important;gap:6px;min-height:44px!important}:global(.qm-tag-group-title svg){width:12px!important;height:12px!important}
- :global(.qm-root[data-layout=desktop]) .qm-tag-line{min-height:34px}:global(.qm-root[data-layout=desktop]) .qm-tag-line :global(.qm-button){width:28px;min-width:28px;min-height:28px;height:28px}:global(.qm-root[data-layout=desktop]) .qm-tag-spacer{width:28px}:global(.qm-root[data-layout=desktop]) .qm-tag-line :global(.qm-tag-more){opacity:0}:global(.qm-root[data-layout=desktop]) .qm-tag-line:hover :global(.qm-tag-more),:global(.qm-root[data-layout=desktop]) .qm-tag-line:focus-within :global(.qm-tag-more){opacity:1}:global(.qm-root[data-layout=desktop]) .qm-tag-heading{padding-left:28px}
-.qm-tag-nested:before{content:'';position:absolute;left:calc(var(--qm-tag-indent) + 6px);top:0;bottom:0;border-left:1px solid var(--qm-border)}.qm-tag-row strong{font-weight:600}
- :global(.qm-root[data-layout=desktop] .qm-tag-group-title){padding-left:28px!important}:global(.qm-root[data-layout=desktop]) .qm-tag-nested:before{left:calc(var(--qm-tag-indent) - 2px)}
+    .qm-tag-group {
+        margin-top: 20px;
+    }
+    .qm-tag-heading {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 12px 0 44px;
+        min-height: 44px;
+        margin: 0 0 4px;
+    }
+    .qm-tag-heading > span {
+        font-size: 12px;
+    }
+    .qm-tag-find {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        width: 100%;
+        background: var(--qm-fill);
+        border-radius: 8px;
+        padding-left: 8px;
+    }
+    .qm-tag-find :global(svg) {
+        width: 14px;
+        height: 14px;
+    }
+    .qm-tag-search {
+        box-sizing: border-box;
+        width: 100%;
+        min-width: 0;
+        height: 36px;
+        background: transparent;
+        color: var(--qm-text);
+        border: 0;
+        padding: 8px;
+        font-size: 13px;
+    }
+    .qm-tag-heading:has(.qm-tag-find) {
+        padding-left: 12px;
+    }
+    .qm-tag-line {
+        position: relative;
+        display: flex;
+        align-items: center;
+        min-height: 44px;
+    }
+    .qm-tag-line .qm-tag-row {
+        flex: 1;
+        min-width: 0;
+        padding-left: 0;
+    }
+    .qm-tag-row > span:first-child {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+    .qm-tag-spacer {
+        width: 44px;
+        flex-shrink: 0;
+    }
+    .qm-tag-line :global(.qm-button) {
+        width: 44px;
+        min-width: 44px;
+        min-height: 44px;
+    }
+    .qm-tag-line :global([aria-expanded='true'] svg),
+    :global(.qm-tag-group-title[aria-expanded='true'] svg) {
+        transform: rotate(90deg);
+    }
+    :global(.qm-tag-group-title) {
+        padding-left: 44px !important;
+        font-size: 12px !important;
+        color: var(--qm-text-secondary) !important;
+        gap: 6px;
+        min-height: 44px !important;
+    }
+    :global(.qm-tag-group-title svg) {
+        width: 12px !important;
+        height: 12px !important;
+    }
+    :global(.qm-root[data-layout='desktop']) .qm-tag-line {
+        min-height: 34px;
+    }
+    :global(.qm-root[data-layout='desktop']) .qm-tag-line :global(.qm-button) {
+        width: 28px;
+        min-width: 28px;
+        min-height: 28px;
+        height: 28px;
+    }
+    :global(.qm-root[data-layout='desktop']) .qm-tag-spacer {
+        width: 28px;
+    }
+    :global(.qm-root[data-layout='desktop']) .qm-tag-line :global(.qm-tag-more) {
+        opacity: 0;
+    }
+    :global(.qm-root[data-layout='desktop']) .qm-tag-line:hover :global(.qm-tag-more),
+    :global(.qm-root[data-layout='desktop']) .qm-tag-line:focus-within :global(.qm-tag-more) {
+        opacity: 1;
+    }
+    :global(.qm-root[data-layout='desktop']) .qm-tag-heading {
+        padding-left: 28px;
+    }
+    .qm-tag-nested:before {
+        content: '';
+        position: absolute;
+        left: calc(var(--qm-tag-indent) + 6px);
+        top: 0;
+        bottom: 0;
+        border-left: 1px solid var(--qm-border);
+    }
+    .qm-tag-row strong {
+        font-weight: 600;
+    }
+    :global(.qm-root[data-layout='desktop'] .qm-tag-group-title) {
+        padding-left: 28px !important;
+    }
+    :global(.qm-root[data-layout='desktop']) .qm-tag-nested:before {
+        left: calc(var(--qm-tag-indent) - 2px);
+    }
 </style>
