@@ -109,6 +109,7 @@
             try {
                 if (!drafts.save(draftId, { text: editor.value(), images: images.slice() }))
                     onnotify('draftUnavailable');
+                else shared.setDraft(draftId, Boolean(editor.value().trim() || images.length));
             } catch {
                 onnotify('draftUnavailable');
             }
@@ -182,6 +183,7 @@
         } catch {
             onnotify('draftUnavailable');
         }
+        shared.setDraft(draftId, Boolean(saved && (saved.text.trim() || saved.images.length)));
         const original = memo ? parseMemoMarkdown(memo.markdown) : { text: '', images: [] };
         editor.load(
             saved?.text ?? original.text,
@@ -394,6 +396,7 @@
     }
     export function removeDraft(id) {
         drafts.remove(id);
+        shared.setDraft(id, false);
     }
     export async function reloadMemo(id) {
         if (draftId === id) loadDraft(await repository.get(id));
@@ -451,6 +454,7 @@
         if (dead) return;
         try {
             drafts.remove(draftId);
+            shared.setDraft(draftId, false);
         } catch {
             onnotify('draftUnavailable');
         }
@@ -651,6 +655,15 @@
         );
     }
     onMount(() => {
+        if (storage)
+            for (let i = 0; i < storage.length; i++) {
+                const key = storage.key(i);
+                if (key?.startsWith('qingmo:draft:')) {
+                    const id = key.slice('qingmo:draft:'.length),
+                        saved = drafts.load(id);
+                    shared.setDraft(id, Boolean(saved && (saved.text.trim() || saved.images.length)));
+                }
+            }
         doc.addEventListener('pointerdown', dismissFormat, true);
         doc.addEventListener('keydown', formatKeys, true);
         const visibility = () => {

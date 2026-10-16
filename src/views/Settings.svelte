@@ -50,6 +50,7 @@
                   pathTemplate: shared.settings.pathTemplate || DEFAULT_SETTINGS.pathTemplate,
                   openOnStartup: !!shared.settings.openOnStartup,
                   floatingButton: !!shared.settings.floatingButton,
+                  collapseLongMemos: shared.settings.collapseLongMemos,
                   tencentSecretId: shared.settings.tencentSecretId || '',
                   tencentSecretKey: shared.settings.tencentSecretKey || ''
               };
@@ -198,6 +199,13 @@
                                 type="checkbox"
                                 role="switch"
                                 bind:checked={draft.floatingButton}
+                            /></label
+                        >
+                        <label class="qm-setting-row qm-setting-switch"
+                            ><span>{t('collapseLongMemos')}</span><input
+                                type="checkbox"
+                                role="switch"
+                                bind:checked={draft.collapseLongMemos}
                             /></label
                         >
                     </div>

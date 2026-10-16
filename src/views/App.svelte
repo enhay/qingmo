@@ -548,6 +548,11 @@
                     {renderBlockDOM}
                     {openBlock}
                     {choose}
+                    draft={!!shared.drafts[memo.id]}
+                    collapseLongMemos={shared.settings.collapseLongMemos}
+                    desktop={layout === 'desktop'}
+                    onedit={memo => (memo.type === 'p' || memo.type === 's' ? compose(memo) : openBlock(memo.id))}
+                    oninsight={memo => openInsight('default', memo.id)}
                     onmenu={memoMenu}
                     onimage={image}
                 />{/each}{#if !items.length && !loading}<div class="qm-empty">

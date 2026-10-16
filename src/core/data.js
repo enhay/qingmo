@@ -3,6 +3,7 @@ const DEFAULT_SETTINGS = {
     pathTemplate: '/轻墨/{yyyy}/{MM}/{yyyy-MM-dd}',
     openOnStartup: false,
     floatingButton: true,
+    collapseLongMemos: true,
     reviewCount: 5,
     favoriteTags: [],
     reviewScope: { tag: '', start: '', end: '' },

@@ -272,5 +272,9 @@
   "notesCount": "{count} 条",
   "sentSummary": "{count} 条，约 {chars} 字",
   "imagesOnly": "只支持图片",
-  "referenceSearchFailed": "引用搜索失败"
+  "referenceSearchFailed": "引用搜索失败",
+  "collapseLongMemos": "长笔记折叠",
+  "hasEditDraft": "有未发送的修改",
+  "draftLabel": "草稿",
+  "insightEntry": "洞察"
 }

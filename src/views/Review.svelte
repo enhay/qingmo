@@ -195,7 +195,19 @@
                     t('unlimited')} · {t('reviewActual', { count: ids.length })}
             </p>{/if}
         <div class="qm-review-stack">
-            <MemoCard {memo} {t} {renderMarkdown} {renderBlockDOM} {openBlock} {choose} {onmenu} {onimage} review />
+            <MemoCard
+                {memo}
+                {t}
+                {renderMarkdown}
+                {renderBlockDOM}
+                {openBlock}
+                {choose}
+                {onmenu}
+                {onimage}
+                draft={!!shared.drafts[memo.id]}
+                oninsight={item => oninsight('default', item.id)}
+                review
+            />
         </div>
         {#if mode === 'daily'}<div
                 class="qm-review-dots"

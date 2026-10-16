@@ -1,6 +1,7 @@
 <script>
     let { name } = $props();
     const paths = {
+        'circle-dot': 'M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18M12 12h.01',
         info: 'M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18M12 11v6M12 7h.01',
         play: 'M7 4l14 8-14 8z',
         pause: 'M8 4v16M16 4v16',

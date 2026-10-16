@@ -3,8 +3,24 @@
     import { parseMemoMarkdown } from '../core/data.js';
     import { safeURL } from '../views/context.js';
     import Button from './Button.svelte';
+    import Icon from './Icon.svelte';
     import AudioPlayer from './AudioPlayer.svelte';
-    let { memo, t, renderMarkdown, renderBlockDOM, openBlock, choose, onmenu, onimage, review = false } = $props();
+    let {
+        memo,
+        t,
+        renderMarkdown,
+        renderBlockDOM,
+        openBlock,
+        choose,
+        onmenu,
+        onimage,
+        review = false,
+        draft = false,
+        collapseLongMemos = true,
+        onedit,
+        oninsight,
+        desktop = false
+    } = $props();
     let card,
         body,
         collapsed = $state(true),
@@ -65,6 +81,7 @@
     });
     $effect(() => {
         rendered;
+        collapseLongMemos;
         tick().then(() => {
             if (body && collapsed) clipped = body.scrollHeight > body.clientHeight + 12;
         });
@@ -98,8 +115,10 @@
             >{#if memo.pinned}{t('pinnedLabel')} ·
             {/if}{date.length >= 12
                 ? `${date.slice(0, 4)}-${date.slice(4, 6)}-${date.slice(6, 8)} ${date.slice(8, 10)}:${date.slice(10, 12)}`
-                : date}</time
-        ><Button
+                : date}{#if draft}<span title={t('hasEditDraft')}> · {t('draftLabel')}</span>{/if}</time
+        >{#if oninsight}<button type="button" class="qm-card-insight" onclick={() => oninsight(memo)}
+                ><Icon name="circle-dot" />{t('insightEntry')}</button
+            >{/if}<Button
             label={t('memoActions')}
             icon="more"
             class="qm-card-more"
@@ -118,8 +137,11 @@
     <div
         bind:this={body}
         class="qm-body"
-        class:qm-collapsed={collapsed && !review}
-        class:qm-clipped={clipped && !review}
+        class:qm-collapsed={collapseLongMemos && collapsed && !review}
+        class:qm-clipped={collapseLongMemos && clipped && !review}
+        ondblclick={e => {
+            if (desktop && !e.target.closest('a,button,[data-tag],img,audio,video')) onedit?.(memo);
+        }}
         onclick={e => {
             const tag = e.target.closest('[data-tag]');
             if (tag) choose({ tag: tag.dataset.tag });
@@ -134,7 +156,7 @@
         {#if renderMarkdown}{@html rendered.html}{:else}{parsed.text}{/if}
     </div>
     {#each rendered.audio as segment}<AudioPlayer path={segment.path} {t} pending={segment.pending} />{/each}
-    {#if clipped && !review}<Button
+    {#if collapseLongMemos && clipped && !review}<Button
             label={t(collapsed ? 'expand' : 'collapse')}
             class="qm-expand"
             aria-expanded={!collapsed}
@@ -154,3 +176,32 @@
             >{/each}
     </div>
 </article>
+
+<style>
+    .qm-card-insight {
+        display: none;
+        align-items: center;
+        gap: 4px;
+        margin-left: auto;
+        margin-right: 8px;
+        min-height: 28px;
+        border: 0;
+        background: transparent;
+        color: var(--qm-link);
+        font-size: 12px;
+        visibility: hidden;
+    }
+    .qm-card-insight :global(svg) {
+        width: 12px;
+        height: 12px;
+    }
+    @media (hover: hover) {
+        .qm-card-insight {
+            display: flex;
+        }
+        .qm-card:hover .qm-card-insight,
+        .qm-card:focus-within .qm-card-insight {
+            visibility: visible;
+        }
+    }
+</style>

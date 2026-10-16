@@ -10,11 +10,21 @@ export function createSharedState({ initial, persist, onSaved = () => {} }) {
         }
     });
     const state = $state({
+        drafts: {},
         transcription: {},
         settings: settings.value,
         insight: { busy: false, phase: 'idle', result: null }
     });
     return {
+        get drafts() {
+            return state.drafts;
+        },
+        setDraft(id, present) {
+            if (id !== 'new') {
+                if (present) state.drafts[id] = true;
+                else delete state.drafts[id];
+            }
+        },
         get settings() {
             return state.settings;
         },
