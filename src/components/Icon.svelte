@@ -17,6 +17,8 @@
         highlight: 'M8 3h8v12H8zM6 21h12M10 15v3h4v-3',
         sort: 'M8 3v18M4 7l4-4 4 4M16 21V3M12 17l4 4 4-4',
         filter: 'M3 4h18l-7 8v8l-4-2v-6z',
+        'chevron-left': 'M15 5l-7 7 7 7',
+        'chevron-right': 'M9 5l7 7-7 7',
         chevron: 'M9 5l7 7-7 7',
         check: 'M5 12l4 4L19 6',
         triangle: 'M9 5l8 7-8 7z',

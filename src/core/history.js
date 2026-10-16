@@ -1,3 +1,29 @@
+export function countText(text) {
+    return Array.from(String(text || '').replace(/\s/gu, '')).length;
+}
+export function historyPlainText(dom, doc) {
+    const template = doc.createElement('template');
+    template.innerHTML = dom;
+    template.content.querySelectorAll('img,audio,video,.protyle-attr,script,style').forEach(node => node.remove());
+    return [...template.content.querySelectorAll('[contenteditable="true"]')]
+        .filter(node => !node.querySelector('[contenteditable="true"]'))
+        .map(node => node.textContent.replace(/[\u200b\u2060]/g, ''))
+        .join('');
+}
+export function historyTime(created, now = new Date()) {
+    const date = new Date(Number(created) * 1000),
+        day = value => Date.UTC(value.getFullYear(), value.getMonth(), value.getDate());
+    const elapsed = Math.round((day(now) - day(date)) / 86400000);
+    const time = `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
+    if (elapsed === 0) return { key: 'historyToday', time };
+    if (elapsed === 1) return { key: 'historyYesterday', time };
+    if (elapsed >= 2 && elapsed <= 6) return { key: 'historyDaysAgo', days: elapsed };
+    return {
+        key: 'historyDate',
+        date: `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`,
+        time
+    };
+}
 const failure = code => Object.assign(new Error(code), { code });
 function extractHistory(content, memo, doc) {
     if (content.rootID !== memo.root_id || content.isLargeDoc || typeof content.content !== 'string')

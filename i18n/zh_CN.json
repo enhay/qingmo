@@ -281,5 +281,10 @@
   "referencedCount": "被引用 {count} 次",
   "lastYearToday": "去年今日",
   "previousImage": "上一张",
-  "nextImage": "下一张"
+  "nextImage": "下一张",
+  "historyToday": "今天 {time}",
+  "historyYesterday": "昨天 {time}",
+  "historyDaysAgo": "{days} 天前",
+  "historyDate": "{date} {time}",
+  "wordCount": "{count} 字"
 }

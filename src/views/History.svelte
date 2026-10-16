@@ -1,7 +1,7 @@
 <script>
     import { getContext, onMount } from 'svelte';
     import { CONTEXT, safeURL } from './context.js';
-    import { historyMarkdown } from '../core/history.js';
+    import { historyMarkdown, historyTime, historyPlainText, countText } from '../core/history.js';
     import { COLLECT_TAG } from '../core/data.js';
     import { createEditor } from '../editor/editor.js';
     import Button from '../components/Button.svelte';
@@ -130,12 +130,17 @@
 <div class="qm-history-layout">
     <nav class="qm-history-times" aria-label={t('historyTimes')}>
         {#each versions as version, i}<Button
-                label={new Date(Number(version.created) * 1000).toLocaleString()}
+                label={t(historyTime(version.created).key, historyTime(version.created))}
                 class="qm-history-time"
                 data-version={i}
                 aria-pressed={selected === i}
                 onclick={() => select(i)}
-            />{/each}
+                ><span
+                    >{t(historyTime(version.created).key, historyTime(version.created))}<small
+                        >{t('wordCount', { count: countText(historyPlainText(version.dom, doc)) })}</small
+                    ></span
+                ></Button
+            >{/each}
         {#if state === 'empty'}<p class="qm-history-empty">{t('historyEmpty')}</p>{/if}
         <p class="qm-history-retention">{t('historyRetention')}</p>
         {#if hasMore}<Button
@@ -191,3 +196,16 @@
             <Button label={t('retry')} onclick={() => load()} />{/if}
     </div>
 </div>
+
+<style>
+    :global(.qm-history-time span) {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        text-align: left;
+    }
+    :global(.qm-history-time small) {
+        font-size: 12px;
+        color: var(--qm-text-secondary);
+    }
+</style>

@@ -30,6 +30,8 @@
         memo = $state(null),
         state = $state('loading'),
         referenceCount = $state(0),
+        trail = $state([]),
+        trailIndex = $state(-1),
         serial = 0,
         dead = false,
         touchX = 0,
@@ -65,11 +67,13 @@
                     0,
                     Math.max(1, Math.min(50, Number(shared.settings.reviewCount) || DEFAULT_SETTINGS.reviewCount))
                 );
+            } else if (trail.length) {
+                next = trail.slice();
             } else {
                 const all = await repository.allIds();
                 if (!valid()) return;
                 next = all.filter(id => id !== memo?.id);
-                next = next.length ? dailyOrder(next, String(Date.now())) : all;
+                next = (next.length ? dailyOrder(next, String(Date.now())) : all).slice(0, 1);
             }
             if (!next.length) {
                 ids = [];
@@ -77,7 +81,10 @@
                 state = 'empty';
                 return;
             }
-            let cursor = mode === 'daily' ? Math.min(index, next.length - 1) : 0;
+            let cursor =
+                mode === 'daily'
+                    ? Math.min(index, next.length - 1)
+                    : Math.max(0, Math.min(trailIndex, next.length - 1));
             let result = await repository.get(next[cursor]);
             if (!valid()) return;
             if (!result) {
@@ -88,6 +95,10 @@
             }
             ids = result ? next : [];
             index = cursor;
+            if (mode === 'random') {
+                trail = next;
+                trailIndex = cursor;
+            }
             referenceCount = result ? (await repository.referenceCounts([result]))[result.id] || 0 : 0;
             if (!valid()) return;
             memo = result;
@@ -111,9 +122,37 @@
             });
         return () => (live = false);
     });
-    function step(delta) {
-        index = Math.max(0, Math.min(ids.length - 1, index + delta));
-        refresh();
+    async function step(delta) {
+        if (state === 'loading') return;
+        if (mode === 'random') {
+            if (delta < 0) {
+                if (trailIndex <= 0) return;
+                trailIndex--;
+            } else if (trailIndex < trail.length - 1) trailIndex++;
+            else {
+                const token = ++serial;
+                state = 'loading';
+                try {
+                    const all = await repository.allIds();
+                    if (dead || token !== serial) return;
+                    const pool = all.filter(id => id !== memo?.id);
+                    const next = (pool.length ? dailyOrder(pool, String(Date.now())) : all)[0];
+                    if (!next) {
+                        state = 'empty';
+                        return;
+                    }
+                    trail.push(next);
+                    trailIndex++;
+                } catch {
+                    if (!dead && token === serial) state = 'error';
+                    return;
+                }
+            }
+        } else index = Math.max(0, Math.min(ids.length - 1, index + delta));
+        await refresh();
+    }
+    export function navigate(delta) {
+        if (mode === 'daily' || mode === 'random') step(delta);
     }
     onMount(() => {
         refresh();
@@ -226,9 +265,13 @@
             {#if mode === 'daily'}<Button label={t('previous')} disabled={index === 0} onclick={() => step(-1)} /><span
                     >{index + 1} / {ids.length}</span
                 ><Button label={t('next')} disabled={index === ids.length - 1} onclick={() => step(1)} />{:else}<Button
-                    label={t('nextRandom')}
-                    onclick={refresh}
-                />{/if}<Button label={t('openNative')} onclick={() => openBlock(memo.id)} />
+                    label={t('previous')}
+                    disabled={trailIndex <= 0}
+                    onclick={() => step(-1)}
+                /><Button label={t('nextRandom')} onclick={() => step(1)} />{/if}<Button
+                label={t('openNative')}
+                onclick={() => openBlock(memo.id)}
+            />
         </div>
     {/if}
     {#if scopeOpen}<Dialog

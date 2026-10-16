@@ -360,6 +360,17 @@
             imageStep(e.key === 'ArrowLeft' ? -1 : 1);
             return;
         }
+        if (
+            ['daily', 'random'].includes(reviewMode) &&
+            !modal &&
+            ['ArrowLeft', 'ArrowRight'].includes(e.key) &&
+            !e.target.closest('input,textarea,select,[contenteditable="true"]')
+        ) {
+            e.preventDefault();
+            e.stopPropagation();
+            review?.navigate(e.key === 'ArrowLeft' ? -1 : 1);
+            return;
+        }
         if (e.key === 'Escape') {
             e.preventDefault();
             e.stopPropagation();
@@ -411,7 +422,6 @@
         win.addEventListener('focus', foreground);
         doc.addEventListener('pointerdown', pointer, true);
         doc.addEventListener('keydown', key, true);
-        doc.addEventListener('keydown', keyboard);
         const resize = typeof win.ResizeObserver === 'function' ? new win.ResizeObserver(applyLayout) : null;
         resize?.observe(root);
         win.visualViewport?.addEventListener('resize', keyboardChanged);
@@ -425,7 +435,6 @@
             win.removeEventListener('focus', foreground);
             doc.removeEventListener('pointerdown', pointer, true);
             doc.removeEventListener('keydown', key, true);
-            doc.removeEventListener('keydown', keyboard);
             win.visualViewport?.removeEventListener('resize', keyboardChanged);
             win.visualViewport?.removeEventListener('scroll', keyboardChanged);
         };
@@ -449,6 +458,7 @@
     bind:this={root}
     role="region"
     aria-label={t('appName')}
+    onkeydown={keyboard}
     class={'qm-root qm-' + mode}
     class:qm-sidebar-open={sideOpen}
     class:qm-review-active={!!reviewMode}
@@ -744,11 +754,13 @@
                     <img src={safeURL(modal.images[modal.index], true)} alt={t('attachedImage')} />
                     {#if modal.index > 0}<Button
                             label={t('previousImage')}
+                            icon="chevron-left"
                             class="qm-image-previous"
                             onclick={() => imageStep(-1)}
                         />{/if}
                     {#if modal.index < modal.images.length - 1}<Button
                             label={t('nextImage')}
+                            icon="chevron-right"
                             class="qm-image-next"
                             onclick={() => imageStep(1)}
                         />{/if}
