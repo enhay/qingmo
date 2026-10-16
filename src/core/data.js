@@ -370,6 +370,18 @@ class MemoRepository {
         const items = await Promise.all(rows.slice(0, 20).map(row => this.hydrate(row)));
         return { items, hasMore: rows.length > 20 };
     }
+    async referenceCounts(memos) {
+        if (!memos.length) return {};
+        // Matches SiYuan 3.8.7 fillBlockRefCount / QueryRefCountInBox: count
+        // reference occurrences of this block, without rolling up its children.
+        const rows = await this.request('/api/query/sql', {
+            stmt: `SELECT def_block_id,COUNT(*) AS count FROM refs WHERE def_block_id IN (${memos.map(memo => literal(memo.id)).join(',')}) GROUP BY def_block_id`
+        });
+        return Object.fromEntries(rows.map(row => [row.def_block_id, row.count]));
+    }
+    async backlinkDefinitions(id) {
+        return this.request('/api/block/getRefIDs', { id, notebook: '' });
+    }
     async referenceCandidates(keyword = '', exclude = '') {
         const [local, native] = await Promise.all([
             this.list({ keyword, order: 'newest' }),

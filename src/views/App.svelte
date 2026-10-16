@@ -18,6 +18,8 @@
     const options = untrack(() => suppliedOptions);
     const {
         repository,
+        previewReference,
+        showBacklinks,
         t,
         container,
         renderMarkdown,
@@ -92,6 +94,7 @@
         status = t(key);
         notice = /Failed|Unavailable|audioError_|finishDraftFirst/.test(key) ? t(key) : '';
     }
+    let referenceCounts = $state({});
     async function load(reset) {
         if (dead || (!reset && loading)) return;
         const token = reset ? ++serial : serial;
@@ -100,6 +103,9 @@
         try {
             const result = await repository.list({ ...filter, order: listOrder, offset: reset ? 0 : items.length });
             if (dead || token !== serial) return;
+            const counts = await repository.referenceCounts(result.items);
+            if (dead || token !== serial) return;
+            referenceCounts = reset ? counts : { ...referenceCounts, ...counts };
             items = reset ? result.items : items.concat(result.items);
             hasMore = result.hasMore;
             status = '';
@@ -370,6 +376,11 @@
             key = e => {
                 if (/^(Tab|Enter| |Escape|Arrow)/.test(e.key)) pointerUsed = false;
             };
+        const foreground = () => {
+            if (!doc.hidden) refresh();
+        };
+        doc.addEventListener('visibilitychange', foreground);
+        win.addEventListener('focus', foreground);
         doc.addEventListener('pointerdown', pointer, true);
         doc.addEventListener('keydown', key, true);
         doc.addEventListener('keydown', keyboard);
@@ -382,6 +393,8 @@
         return () => {
             beforeDestroy();
             resize?.disconnect();
+            doc.removeEventListener('visibilitychange', foreground);
+            win.removeEventListener('focus', foreground);
             doc.removeEventListener('pointerdown', pointer, true);
             doc.removeEventListener('keydown', key, true);
             doc.removeEventListener('keydown', keyboard);
@@ -548,6 +561,9 @@
                     {renderBlockDOM}
                     {openBlock}
                     {choose}
+                    {previewReference}
+                    showBacklinks={(id, event) => (options.nativeMobile ? openBlock(id) : showBacklinks(id, event))}
+                    referenceCount={referenceCounts[memo.id] || 0}
                     draft={!!shared.drafts[memo.id]}
                     collapseLongMemos={shared.settings.collapseLongMemos}
                     desktop={layout === 'desktop'}

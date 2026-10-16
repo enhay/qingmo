@@ -29,6 +29,7 @@
         index = $state(0),
         memo = $state(null),
         state = $state('loading'),
+        referenceCount = $state(0),
         serial = 0,
         dead = false,
         touchX = 0,
@@ -87,6 +88,8 @@
             }
             ids = result ? next : [];
             index = cursor;
+            referenceCount = result ? (await repository.referenceCounts([result]))[result.id] || 0 : 0;
+            if (!valid()) return;
             memo = result;
             state = result ? 'ready' : 'empty';
         } catch {
@@ -204,6 +207,9 @@
                 {choose}
                 {onmenu}
                 {onimage}
+                {referenceCount}
+                previewReference={options.previewReference}
+                showBacklinks={(id, event) => (options.nativeMobile ? openBlock(id) : options.showBacklinks(id, event))}
                 draft={!!shared.drafts[memo.id]}
                 oninsight={item => oninsight('default', item.id)}
                 review

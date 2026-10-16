@@ -277,5 +277,6 @@
   "hasEditDraft": "有未发送的修改",
   "draftLabel": "草稿",
   "insightEntry": "洞察",
-  "referenceCandidates": "引用候选"
+  "referenceCandidates": "引用候选",
+  "referencedCount": "被引用 {count} 次"
 }

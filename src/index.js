@@ -207,6 +207,41 @@ export default class QingMoPlugin extends Plugin {
             container,
             request: this.request,
             insights: this.insights,
+            nativeMobile: this.mobile,
+            previewReference: (id, event) => {
+                const config = window.siyuan.config.editor;
+                if (
+                    this.mobile ||
+                    config.floatWindowMode === 2 ||
+                    (config.floatWindowMode === 1 && !(event.ctrlKey || event.metaKey))
+                )
+                    return;
+                const target = event.currentTarget;
+                const timer = setTimeout(() => {
+                    if (target.isConnected)
+                        this.addFloatLayer({
+                            refDefs: [{ refID: id }],
+                            targetElement: target,
+                            x: event.clientX,
+                            y: event.clientY,
+                            isBacklink: false
+                        });
+                }, config.floatWindowDelay);
+                return () => clearTimeout(timer);
+            },
+            showBacklinks: async (id, event) => {
+                if (this.mobile) return;
+                const targetElement = event.currentTarget;
+                const definitions = await this.repository.backlinkDefinitions(id);
+                if (definitions.refDefs?.length)
+                    this.addFloatLayer({
+                        ...definitions,
+                        targetElement,
+                        x: event.clientX,
+                        y: event.clientY,
+                        isBacklink: true
+                    });
+            },
             openAISettings: () => openSetting(this.app),
             blockExists: async id =>
                 /^\d{14}-[a-z0-9]{7}$/.test(id) &&

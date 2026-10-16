@@ -19,10 +19,14 @@
         collapseLongMemos = true,
         onedit,
         oninsight,
-        desktop = false
+        desktop = false,
+        previewReference,
+        showBacklinks,
+        referenceCount = 0
     } = $props();
     let card,
         body,
+        cancelPreview,
         collapsed = $state(true),
         clipped = $state(false);
     let parsed = $derived(parseMemoMarkdown(memo.markdown));
@@ -86,6 +90,7 @@
             if (body && collapsed) clipped = body.scrollHeight > body.clientHeight + 12;
         });
     });
+    $effect(() => () => cancelPreview?.());
     function context(event) {
         const selection = card.ownerDocument.defaultView.getSelection();
         const text =
@@ -139,6 +144,23 @@
         class="qm-body"
         class:qm-collapsed={collapseLongMemos && collapsed && !review}
         class:qm-clipped={collapseLongMemos && clipped && !review}
+        onpointerover={e => {
+            const link = e.target.closest('a[href^="siyuan://blocks/"]');
+            const id = link?.getAttribute('href')?.match(/^siyuan:\/\/blocks\/(\d{14}-[a-z0-9]{7})$/)?.[1];
+            if (id && !link.contains(e.relatedTarget)) {
+                cancelPreview?.();
+                cancelPreview = previewReference?.(id, {
+                    currentTarget: link,
+                    clientX: e.clientX,
+                    clientY: e.clientY,
+                    ctrlKey: e.ctrlKey,
+                    metaKey: e.metaKey
+                });
+            }
+        }}
+        onpointerout={e => {
+            if (e.target.closest('a[href^="siyuan://blocks/"]')) cancelPreview?.();
+        }}
         ondblclick={e => {
             if (desktop && !e.target.closest('a,button,[data-tag],img,audio,video')) onedit?.(memo);
         }}
@@ -175,9 +197,24 @@
                 ><img src={safeURL(path, true)} alt={t('attachedImage')} loading="lazy" /></Button
             >{/each}
     </div>
+    {#if referenceCount > 0}<Button
+            label={t('referencedCount', { count: referenceCount })}
+            icon="link"
+            class="qm-reference-count"
+            onclick={event => showBacklinks?.(memo.id, event)}
+            ><span>{t('referencedCount', { count: referenceCount })}</span></Button
+        >{/if}
 </article>
 
 <style>
+    :global(.qm-reference-count) {
+        display: flex;
+        gap: 4px;
+        margin-top: 12px;
+        color: var(--qm-link);
+        font-size: 13px;
+        min-height: 44px;
+    }
     .qm-card-insight {
         display: none;
         align-items: center;
