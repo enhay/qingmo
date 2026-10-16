@@ -516,9 +516,13 @@ function createEditor({ element, renderMarkdown, onChange, onSelection, onFiles 
         event.preventDefault();
         const data = event.clipboardData;
         if (data.files.length) onFiles?.([...data.files]);
+        const pasted = doc.createElement('template');
+        pasted.innerHTML = data.getData('text/html');
+        if ([...data.files].some(file => file.type.startsWith('image/')))
+            pasted.content.querySelectorAll('img').forEach(image => image.remove());
         insertHTML(
             data.getData('text/html')
-                ? sanitize(data.getData('text/html'))
+                ? sanitize(pasted.innerHTML)
                 : escapeHTML(data.getData('text/plain')).replace(/\n/g, '<br>')
         );
         decorate();

@@ -767,18 +767,21 @@
         bind:this={candidates}
         class="qm-candidates"
         role="listbox"
-        aria-label={t('tags')}
+        aria-label={t(references.length ? 'referenceCandidates' : 'tags')}
         style:left={candidateLeft + 'px'}
         style:top={candidateTop + 'px'}
     >
         {#each references as item, i}<button
                 type="button"
                 class="qm-reference-option"
+                class:qm-reference-separator={i > 0 && references[i - 1].local && !item.local}
                 role="option"
                 aria-selected={referenceIndex === i}
                 onmousedown={e => e.preventDefault()}
                 onclick={() => completeReference(item)}
-                ><span>{item.label}</span><small>{item.local ? item.created?.slice(0, 8) : item.path}</small></button
+                >{#if item.local}<small>{item.created?.slice(0, 8)}</small><span>{item.label}</span>{:else}<span
+                        >{item.label}</span
+                    ><small>{item.path}</small>{/if}</button
             >{/each}
         {#each tagOptions as tag, i}<button
                 type="button"
@@ -899,6 +902,9 @@
         border: 0;
         background: var(--qm-surface);
         color: var(--qm-text);
+    }
+    .qm-reference-separator {
+        border-top: 1px solid var(--qm-border);
     }
     .qm-reference-option[aria-selected='true'] {
         background: var(--qm-fill);
