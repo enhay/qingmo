@@ -958,6 +958,11 @@
         gap: 16px;
     }
     .qm-image-position {
+        width: fit-content;
+        margin: 0 auto 8px;
+        padding: 4px 10px;
+        border-radius: 12px;
+        background: var(--qm-viewer-scrim);
         color: var(--qm-on-brand);
         text-align: center;
         font-size: 13px;
@@ -967,7 +972,7 @@
         position: absolute;
         top: 50%;
         color: var(--qm-on-brand);
-        background: var(--qm-overlay);
+        background: var(--qm-viewer-scrim);
         border-radius: 50%;
     }
     :global(.qm-image-previous) {
