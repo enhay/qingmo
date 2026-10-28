@@ -39,7 +39,13 @@ export function createSharedState({ initial, persist, onSaved = () => {} }) {
             return state.insight;
         },
         setInsight(value) {
-            state.insight = { busy: value.busy, phase: value.phase, result: value.result, snapshot: value.snapshot };
+            state.insight = {
+                busy: value.busy,
+                phase: value.phase,
+                result: value.result ? { ...value.result } : null,
+                snapshot: value.snapshot,
+                error: value.error?.code
+            };
         },
         saveSettings: patch => settings.save(patch)
     };

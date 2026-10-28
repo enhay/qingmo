@@ -6,7 +6,7 @@ import FloatingCapture from './components/FloatingCapture.svelte';
 
 const TAB_TYPE = 'qingmo-tab';
 import { MemoRepository, DEFAULT_SETTINGS, COLLECT_TAG } from './core/data.js';
-import { InsightService } from './core/insights.js';
+import { createInsights } from './state/insights.svelte.js';
 import { createEditor } from './editor/editor.js';
 import { transcribeAudio } from './core/transcription.js';
 import { MemoHistory } from './core/history.js';
@@ -51,20 +51,13 @@ export default class QingMoPlugin extends Plugin {
                 this.refreshViews?.();
             }
         });
-        this.insights = new InsightService({
+        this.insights = createInsights({
             repository: this.repository,
             request: this.request,
             document,
-            getModel: async () => {
-                const { conf } = await this.request('/api/system/getConf');
-                const ai = conf.ai,
-                    id = ai?.editing?.modelId;
-                for (const provider of ai?.providers || []) {
-                    if (provider.enabled === false) continue;
-                    const model = provider.models?.find(item => item.id === id);
-                    if (model) return model.name || model.id;
-                }
-                return '';
+            getAI: async options => {
+                const { conf } = await this.request('/api/system/getConf', {}, options);
+                return conf.ai;
             },
             loadResource: async path => {
                 const response = await fetch(`/plugins/${this.name}/skills/qingmo-insights/${path}`);

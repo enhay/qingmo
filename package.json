@@ -22,5 +22,12 @@
     "prettier-plugin-svelte": "4.1.1",
     "svelte": "5.57.2",
     "vite": "8.3.4"
+  },
+  "dependencies": {
+    "@ai-sdk/anthropic": "4.0.90",
+    "@ai-sdk/openai": "4.0.104",
+    "@ai-sdk/svelte": "5.0.155",
+    "ai": "7.0.155",
+    "zod": "4.4.3"
   }
 }
